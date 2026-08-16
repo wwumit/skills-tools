@@ -1,0 +1,261 @@
+{
+  "metadata": {
+    "total_messages": 19,
+    "speakers": [
+      "老王",
+      "小张",
+      "小李"
+    ],
+    "topics_found": 1,
+    "decisions_found": 7,
+    "action_items_found": 2,
+    "consensus_found": 8,
+    "divergence_found": 3
+  },
+  "topics": [
+    {
+      "title": "General Discussion",
+      "message_count": 19,
+      "speakers": [
+        "老王",
+        "小李",
+        "小张"
+      ],
+      "decisions": [
+        {
+          "decision": "对，所以我想推一个社交裂变。用户邀请好友得积分，积分兑高级功能。",
+          "by": "老王",
+          "context_snippet": "8%不容易，不过留存数据还行，次日留存42%。关键还是拉新。",
+          "message_index": 2
+        },
+        {
+          "decision": "好。另外，要不要看看海外市场？东南亚增长快。",
+          "by": "老王",
+          "context_snippet": "运营那边我协调。先定需求范围，老王你周五前出方案。",
+          "message_index": 5
+        },
+        {
+          "decision": "同意，一个季度做一个核心方向。",
+          "by": "小李",
+          "context_snippet": "方向对，但Q3资源有限，建议Q4再立项。Q3聚焦国内拉新。",
+          "message_index": 7
+        }
+      ],
+      "action_items": [
+        {
+          "task": "运营那边我协调。先定需求范围，老王你周五前出方案。",
+          "assignee": "小张",
+          "mentioned_by": "小张",
+          "message_index": 4
+        },
+        {
+          "task": "好，今天就定下来。老王负责产品和社交裂变方案，小李负责AI推荐MVP和性能优化，我协调运营和市场。周三再碰一次，对齐进度。",
+          "assignee": "小张",
+          "mentioned_by": "小张",
+          "message_index": 16
+        }
+      ],
+      "consensus": [
+        {
+          "agreement": "好。另外，要不要看看海外市场？东南亚增长快。",
+          "agreed_by": "老王",
+          "responding_to": "运营那边我协调。先定需求范围，老王你周五前出方案。",
+          "respondent_speaker": "小张",
+          "message_index": 5
+        },
+        {
+          "agreement": "方向对，但Q3资源有限，建议Q4再立项。Q3聚焦国内拉新。",
+          "agreed_by": "小张",
+          "responding_to": "好。另外，要不要看看海外市场？东南亚增长快。",
+          "respondent_speaker": "老王",
+          "message_index": 6
+        },
+        {
+          "agreement": "同意，一个季度做一个核心方向。",
+          "agreed_by": "小李",
+          "responding_to": "方向对，但Q3资源有限，建议Q4再立项。Q3聚焦国内拉新。",
+          "respondent_speaker": "小张",
+          "message_index": 7
+        }
+      ],
+      "divergence": [
+        {
+          "viewpoint": "8%不容易，不过留存数据还行，次日留存42%。关键还是拉新。",
+          "raised_by": "小张",
+          "trigger_word": "不过",
+          "message_index": 1
+        },
+        {
+          "viewpoint": "技术上我评估过，基础功能两个开发，两周搞定。但需要运营配合做活动页。",
+          "raised_by": "小李",
+          "trigger_word": "但",
+          "message_index": 3
+        },
+        {
+          "viewpoint": "方向对，但Q3资源有限，建议Q4再立项。Q3聚焦国内拉新。",
+          "raised_by": "小张",
+          "trigger_word": "但",
+          "message_index": 6
+        }
+      ],
+      "key_points": [
+        "今天拉个会，讨论一下Q3的产品路线图。我先说背景——目前活跃用户增长率5%左右，Q3目标提到8%。",
+        "同意。那Q3三个方向：社交裂变、性能优化、AI推荐MVP。小李，社交裂变和AI推荐MVP有资源冲突吗？",
+        "好，今天就定下来。老王负责产品和社交裂变方案，小李负责AI推荐MVP和性能优化，我协调运营和市场。周三再碰一次，对齐进度。"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "对，所以我想推一个社交裂变。用户邀请好友得积分，积分兑高级功能。",
+      "by": "老王",
+      "context_snippet": "8%不容易，不过留存数据还行，次日留存42%。关键还是拉新。",
+      "message_index": 2
+    },
+    {
+      "decision": "好。另外，要不要看看海外市场？东南亚增长快。",
+      "by": "老王",
+      "context_snippet": "运营那边我协调。先定需求范围，老王你周五前出方案。",
+      "message_index": 5
+    },
+    {
+      "decision": "同意，一个季度做一个核心方向。",
+      "by": "小李",
+      "context_snippet": "方向对，但Q3资源有限，建议Q4再立项。Q3聚焦国内拉新。",
+      "message_index": 7
+    },
+    {
+      "decision": "行，那就这么定。还有个事，用户反馈App启动慢，Q3能不能优化？",
+      "by": "老王",
+      "context_snippet": "同意，一个季度做一个核心方向。",
+      "message_index": 8
+    },
+    {
+      "decision": "这个思路好。先试水MVP，验证后再考虑大模型方案。",
+      "by": "小张",
+      "context_snippet": "可以先做个轻量版——基于用户行为做简单推荐，不需要大模型，MVP两周能上线。",
+      "message_index": 13
+    },
+    {
+      "decision": "同意。那Q3三个方向：社交裂变、性能优化、AI推荐MVP。小李，社交裂变和AI推荐MVP有资源冲突吗？",
+      "by": "老王",
+      "context_snippet": "这个思路好。先试水MVP，验证后再考虑大模型方案。",
+      "message_index": 14
+    },
+    {
+      "decision": "好，今天就定下来。老王负责产品和社交裂变方案，小李负责AI推荐MVP和性能优化，我协调运营和市场。周三再碰一次，对齐进度。",
+      "by": "小张",
+      "context_snippet": "不冲突。社交裂变两个人，AI推荐MVP我自己来，不需要额外人力。",
+      "message_index": 16
+    }
+  ],
+  "action_items": [
+    {
+      "task": "运营那边我协调。先定需求范围，老王你周五前出方案。",
+      "assignee": "小张",
+      "mentioned_by": "小张",
+      "message_index": 4
+    },
+    {
+      "task": "好，今天就定下来。老王负责产品和社交裂变方案，小李负责AI推荐MVP和性能优化，我协调运营和市场。周三再碰一次，对齐进度。",
+      "assignee": "小张",
+      "mentioned_by": "小张",
+      "message_index": 16
+    }
+  ],
+  "consensus": [
+    {
+      "agreement": "好。另外，要不要看看海外市场？东南亚增长快。",
+      "agreed_by": "老王",
+      "responding_to": "运营那边我协调。先定需求范围，老王你周五前出方案。",
+      "respondent_speaker": "小张",
+      "message_index": 5
+    },
+    {
+      "agreement": "方向对，但Q3资源有限，建议Q4再立项。Q3聚焦国内拉新。",
+      "agreed_by": "小张",
+      "responding_to": "好。另外，要不要看看海外市场？东南亚增长快。",
+      "respondent_speaker": "老王",
+      "message_index": 6
+    },
+    {
+      "agreement": "同意，一个季度做一个核心方向。",
+      "agreed_by": "小李",
+      "responding_to": "方向对，但Q3资源有限，建议Q4再立项。Q3聚焦国内拉新。",
+      "respondent_speaker": "小张",
+      "message_index": 7
+    },
+    {
+      "agreement": "行，那就这么定。还有个事，用户反馈App启动慢，Q3能不能优化？",
+      "agreed_by": "老王",
+      "responding_to": "同意，一个季度做一个核心方向。",
+      "respondent_speaker": "小李",
+      "message_index": 8
+    },
+    {
+      "agreement": "可以先做个轻量版——基于用户行为做简单推荐，不需要大模型，MVP两周能上线。",
+      "agreed_by": "小李",
+      "responding_to": "我看了竞品分析。AI推荐开发周期长，至少一两个季度，还要数据积累。",
+      "respondent_speaker": "老王",
+      "message_index": 12
+    },
+    {
+      "agreement": "这个思路好。先试水MVP，验证后再考虑大模型方案。",
+      "agreed_by": "小张",
+      "responding_to": "可以先做个轻量版——基于用户行为做简单推荐，不需要大模型，MVP两周能上线。",
+      "respondent_speaker": "小李",
+      "message_index": 13
+    },
+    {
+      "agreement": "同意。那Q3三个方向：社交裂变、性能优化、AI推荐MVP。小李，社交裂变和AI推荐MVP有资源冲突吗？",
+      "agreed_by": "老王",
+      "responding_to": "这个思路好。先试水MVP，验证后再考虑大模型方案。",
+      "respondent_speaker": "小张",
+      "message_index": 14
+    },
+    {
+      "agreement": "好，今天就定下来。老王负责产品和社交裂变方案，小李负责AI推荐MVP和性能优化，我协调运营和市场。周三再碰一次，对齐进度。",
+      "agreed_by": "小张",
+      "responding_to": "不冲突。社交裂变两个人，AI推荐MVP我自己来，不需要额外人力。",
+      "respondent_speaker": "小李",
+      "message_index": 16
+    }
+  ],
+  "divergence": [
+    {
+      "viewpoint": "8%不容易，不过留存数据还行，次日留存42%。关键还是拉新。",
+      "raised_by": "小张",
+      "trigger_word": "不过",
+      "message_index": 1
+    },
+    {
+      "viewpoint": "技术上我评估过，基础功能两个开发，两周搞定。但需要运营配合做活动页。",
+      "raised_by": "小李",
+      "trigger_word": "但",
+      "message_index": 3
+    },
+    {
+      "viewpoint": "方向对，但Q3资源有限，建议Q4再立项。Q3聚焦国内拉新。",
+      "raised_by": "小张",
+      "trigger_word": "但",
+      "message_index": 6
+    }
+  ],
+  "timeline": [
+    {
+      "index": 1,
+      "speaker": "小张",
+      "snippet": "8%不容易，不过留存数据还行，次日留存42%。关键还是拉新。"
+    },
+    {
+      "index": 7,
+      "speaker": "小李",
+      "snippet": "同意，一个季度做一个核心方向。"
+    },
+    {
+      "index": 16,
+      "speaker": "小张",
+      "snippet": "好，今天就定下来。老王负责产品和社交裂变方案，小李负责AI推荐MVP和性能优化，我协调运营和市场。周三再碰一次，对齐进度。"
+    }
+  ]
+}

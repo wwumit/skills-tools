@@ -1,0 +1,68 @@
+{
+  "name": "excel2insights-pro",
+  "version": "1.1.0",
+  "description": "Excel2Insights Pro — 交互式数据分析和可视化仪表板。自动加载、分析、可视化CSV/XLSX/TSV数据，生成交互式HTML仪表板，支持品牌定制和PDF导出。🎉 v1.1.0: Plotly交互图表，品牌化仪表板，安全扫描通过。",
+  "author": "ChengQian (成乾)",
+  "license": "MIT",
+  "keywords": [
+    "excel",
+    "数据分析",
+    "data-analysis",
+    "visualization",
+    "plotly",
+    "interactive-charts",
+    "dashboard",
+    "csv",
+    "xlsx",
+    "pandas",
+    "数据可视化",
+    "insights",
+    "reporting",
+    "pro"
+  ],
+  "files": [
+    "SKILL.md",
+    "package.json",
+    "requirements.txt",
+    "CHANGELOG.md",
+    "README.md",
+    "scripts/",
+    "assets/",
+    "references/"
+  ],
+  "scripts": {
+    "scan": "python3 scripts/excel-reader.py",
+    "analyze": "python3 scripts/data-analyzer.py",
+    "chart": "python3 scripts/chart-generator.py",
+    "dashboard": "python3 scripts/dashboard-generator.py",
+    "pipeline": "python3 scripts/auto-pipeline.py",
+    "init-brand": "python3 scripts/dashboard-generator.py --init-brand"
+  },
+  "openclaw": {
+    "skill": true,
+    "category": "data-analysis",
+    "region": "global",
+    "dependencies": [
+      "python3",
+      "pandas",
+      "numpy",
+      "plotly",
+      "openpyxl"
+    ],
+    "compatibility": {
+      "minOpenClawVersion": "1.0.0",
+      "testedModels": []
+    },
+    "emoji": "📊"
+  },
+  "security": {
+    "scanned": true,
+    "issues": 0,
+    "warnings": 0
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cqdev-ai/excel2insights-pro"
+  },
+  "homepage": "https://github.com/cqdev-ai/excel2insights-pro"
+}

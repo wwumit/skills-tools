@@ -1,0 +1,32 @@
+{
+  "name": "meeting",
+  "description": "正式会议模板，深蓝色调",
+  "style": {
+    "slide_width": 13.333,
+    "slide_height": 7.5,
+    "colors": {
+      "primary": "#0f172a",
+      "secondary": "#1e293b",
+      "accent": "#2b6af6",
+      "background": "#ffffff",
+      "light_bg": "#f1f5f9",
+      "text": "#0f172a",
+      "text_secondary": "#64748b",
+      "text_light": "#ffffff",
+      "border": "#cbd5e1"
+    },
+    "fonts": {
+      "title": "Arial",
+      "body": "Arial",
+      "mono": "Consolas"
+    }
+  },
+  "layouts": {
+    "title": {"accent_bar": true, "dark_bg": true},
+    "overview": {"stats_row": true},
+    "topic": {"accent_bar": true},
+    "decision": {"checkmark": true},
+    "action": {"table": true, "status_colors": true},
+    "appendix": {"simple": true}
+  }
+}

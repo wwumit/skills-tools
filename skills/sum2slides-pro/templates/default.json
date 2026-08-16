@@ -1,0 +1,32 @@
+{
+  "name": "default",
+  "description": "通用专业模板，适合各类场合",
+  "style": {
+    "slide_width": 13.333,
+    "slide_height": 7.5,
+    "colors": {
+      "primary": "#1a56db",
+      "secondary": "#1e293b",
+      "accent": "#06d6a0",
+      "background": "#ffffff",
+      "light_bg": "#f8fafc",
+      "text": "#1e293b",
+      "text_secondary": "#94a3b8",
+      "text_light": "#ffffff",
+      "border": "#e2e8f0"
+    },
+    "fonts": {
+      "title": "Arial",
+      "body": "Arial",
+      "mono": "Consolas"
+    }
+  },
+  "layouts": {
+    "title": {"accent_bar": true},
+    "overview": {"accent_bar": true, "cards": true},
+    "topic": {"accent_bar": true},
+    "decision": {"checkmark": true},
+    "action": {"table": true},
+    "appendix": {"simple": true}
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "brainstorm",
+  "description": "创意讨论模板，多彩活泼",
+  "style": {
+    "slide_width": 13.333,
+    "slide_height": 7.5,
+    "colors": {
+      "primary": "#7c3aed",
+      "secondary": "#1e293b",
+      "accent": "#f59e0b",
+      "background": "#ffffff",
+      "light_bg": "#faf5ff",
+      "text": "#1e293b",
+      "text_secondary": "#94a3b8",
+      "text_light": "#ffffff",
+      "border": "#e9d5ff"
+    },
+    "fonts": {
+      "title": "Arial",
+      "body": "Arial",
+      "mono": "Consolas"
+    }
+  },
+  "layouts": {
+    "title": {"colorful": true},
+    "idea": {"card_grid": true},
+    "comparison": {"split_view": true},
+    "next_steps": {"timeline": true},
+    "appendix": {"simple": true}
+  }
+}

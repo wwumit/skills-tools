@@ -1,0 +1,32 @@
+{
+  "name": "retro",
+  "description": "回顾复盘模板，适合Sprint回顾、项目复盘、阶段性总结",
+  "style": {
+    "slide_width": 13.333,
+    "slide_height": 7.5,
+    "colors": {
+      "primary": "#059669",
+      "secondary": "#064e3b",
+      "accent": "#06d6a0",
+      "background": "#ffffff",
+      "light_bg": "#ecfdf5",
+      "text": "#064e3b",
+      "text_secondary": "#6b7280",
+      "text_light": "#ffffff",
+      "border": "#d1fae5"
+    },
+    "fonts": {
+      "title": "Arial",
+      "body": "Arial",
+      "mono": "Consolas"
+    }
+  },
+  "layouts": {
+    "title": {"accent_bar": true},
+    "overview": {"cards": true, "accent_bar": true},
+    "topic": {"accent_bar": true},
+    "decision": {"checkmark": true},
+    "action": {"table": true},
+    "appendix": {"simple": true}
+  }
+}

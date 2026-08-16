@@ -1,0 +1,69 @@
+{
+  "name": "sum2slides-pro",
+  "version": "1.1.0",
+  "description": "群聊/人机对话一键生成PPT。支持飞书、钉钉、企微群讨论记录，以及人与AI助手的深度对谈，自动提取话题、决策、待办，输出结构化演示文稿。",
+  "author": "ChengQian (cqdev-ai)",
+  "license": "Proprietary",
+  "keywords": [
+    "ppt",
+    "presentation",
+    "slides",
+    "meeting",
+    "dialogue",
+    "summary",
+    "brainstorm",
+    "群聊",
+    "会议总结",
+    "PPT生成",
+    "对话总结",
+    "飞书",
+    "钉钉",
+    "企业微信",
+    "让开会更简单"
+  ],
+  "files": [
+    "SKILL.md",
+    "package.json",
+    "requirements.txt",
+    "CHANGELOG.md",
+    "README.md",
+    "DISCLAIMER.md",
+    "scripts/",
+    "templates/",
+    "assets/"
+  ],
+  "scripts": {
+    "parse": "python3 scripts/chat-parser.py",
+    "extract": "python3 scripts/topic-extractor.py",
+    "build": "python3 scripts/slide-builder.py",
+    "templates": "python3 scripts/template-manager.py",
+    "pipeline": "python3 scripts/auto-pipeline.py",
+    "demo": "python3 scripts/auto-pipeline.py --input assets/demo-group-chat.txt --template meeting",
+    "demo-ai": "python3 scripts/auto-pipeline.py --input assets/demo-ai-conversation.txt --template brainstorm"
+  },
+  "openclaw": {
+    "skill": true,
+    "category": "productivity",
+    "region": "china",
+    "dependencies": [
+      "python3",
+      "python-pptx",
+      "pyyaml"
+    ],
+    "compatibility": {
+      "minOpenClawVersion": "1.0.0",
+      "testedModels": []
+    },
+    "emoji": "📽️"
+  },
+  "security": {
+    "scanned": true,
+    "issues": 0,
+    "warnings": 0
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cqdev-ai/sum2slides-pro"
+  },
+  "homepage": "https://github.com/cqdev-ai/sum2slides-pro"
+}
