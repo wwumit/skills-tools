@@ -1,4 +1,11 @@
 # Changelog
+## 1.4.4 (2026-08-16)
+
+- **DISCLOSURE 检查改进**：
+  - DISCL-003 豁免薄客户端零私钥模式（SKILL.md/README 声明"薄客户端/零私钥/密钥由服务端管理"且 api_keys 为空 → 不报缺 D3）
+  - DISCL-006 排除本地监听地址（0.0.0.0/127.0.0.1/localhost/::1，非外发端点）
+- 案例：shop-ad-check-pro（微信支付 payskill）确认云端支付集成 → cloud:true + compliancehub.cn:8443 + retention:server
+
 ## 1.4.3 (2026-08-16)
 
 - **批次 3：自描述误报治理（红线清零）**

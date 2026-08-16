@@ -585,17 +585,20 @@ class ComplianceChecker:
         return len(re.findall(r"^\s{4}-\s*env:", block, re.M))
 
     def _code_network_domains(self) -> list[str]:
-        """扫描 scripts/ 代码中的网络端点域名（去重）。"""
+        """扫描 scripts/ 代码中的网络端点域名（去重；排除本地监听地址）。"""
         domains: set[str] = set()
         script_dir = os.path.join(self.target_dir, "scripts")
         if not os.path.isdir(script_dir):
             return []
+        local = {"0.0.0.0", "127.0.0.1", "localhost", "::1"}
         for f in sorted(os.listdir(script_dir)):
             if not f.endswith((".py", ".sh", ".mjs", ".js")):
                 continue
             for line in self._read("scripts", f):
                 for m in self._DOMAIN_PATTERN.finditer(line):
-                    domains.add(m.group(1).lower())
+                    d = m.group(1).lower()
+                    if d not in local:
+                        domains.add(d)
         return sorted(domains)
 
     def _code_has_network_calls(self) -> bool:
@@ -655,8 +658,12 @@ class ComplianceChecker:
                 authority_type="platform_policy",
             )
 
-        # 完整性：D3 api_keys（cloud=true 时必填）
-        if cloud and self._api_keys_count(disc_block) == 0:
+        # 完整性：D3 api_keys（cloud=true 时必填；薄客户端零私钥模式豁免）
+        thin_client = any(
+            re.search(p, self._text("SKILL.md") + self._text("README.md"), re.I)
+            for p in [r"薄客户端", r"零私钥", r"密钥.{0,8}服务端", r"server.?managed.{0,6}(key|secret)", r"私钥.{0,8}服务端"]
+        )
+        if cloud and self._api_keys_count(disc_block) == 0 and not thin_client:
             self._add(
                 category="DISCLOSURE", severity="high",
                 file="SKILL.md", line=0,
