@@ -1,4 +1,5 @@
 > ⚠️ **免责声明**：本工具为辅助性参考工具，**不构成投资建议，不构成法律建议**。市场有风险，投资需谨慎；据此操作，风险自担。正式合规意见请咨询具备资质的律师。最终决策与责任由使用者自行承担。
+> **仅供学习研究参考**；> **仅供参考，不构成任何操作依据**；市场有风险，投资需谨慎，据此操作风险自担。
 
 # Skill Compliance Check
 
@@ -44,7 +45,7 @@ python3 scripts/comply.py check --dir ../stock-planner/
 ║   建议：删除或替换为安全的替代方案...
 ║  ──────────────────────
 ║ [   HIGH] (FINANCE) SKILL.md:12
-║    → 推荐买入XX股票
+║    → 示例输出：推荐买入XX股票（仅演示检测能力，非真实建议）
 ║   建议：删除或替换为中性用语...
 ╚══════════════════════════════════════
 ```
@@ -78,7 +79,7 @@ python3 scripts/comply.py summary --dir ../
 
 | 类别 | 检查内容 | 严重级别 |
 |------|---------|----------|
-| FINANCE | 荐股推荐、目标价、保证收益、需资质的金融用语 | high / medium / low |
+| FINANCE | 违规荐股、收益保证、需资质金融用语 | high / medium / low |
 | DISCLAIMER | 投资、法律免责声明是否存在及位置 | high / medium |
 | EXAGGERATION | 绝对化用语、夸大描述、对比表述 | medium |
 | SECURITY | subprocess/exec/eval/JSON 合法性/版本号格式 | critical / high / medium |
