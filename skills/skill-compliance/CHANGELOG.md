@@ -12,6 +12,7 @@
 - **输出 disclosure 摘要**：JSON 报告新增 `disclosure` 字段（camelCase，对齐开放数据层 verified.json/catalog.json 消费形态）
 - 规则从 48 条扩展到 55 条，新增 DISCLOSURE / DEPENDENCY 两个类别
 - **发布披露自测规则集**：docs/disclosure-selfcheck-rules.json（机器可读，schema v1）+ docs/disclosure-selfcheck.md（STANDARD §7 命令块）
+- **修复 DISCLAIMER 位置判定**：跳过 frontmatter 行计数（长 description/permissions 不再导致正文免责被误判"位置不显眼"）
 
 ## 1.3.1 (2026-07-20)
 

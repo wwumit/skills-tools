@@ -248,6 +248,15 @@ class ComplianceChecker:
             has_legal = False
             position = "none"
 
+            # 正文起始行：跳过 frontmatter（--- 到 ---），位置判定只数正文行，
+            # 避免长 frontmatter（多行 description/permissions）导致正文免责被误判为"位置不显眼"
+            body_start = 0
+            if lines and lines[0].strip().startswith("---"):
+                for i, l in enumerate(lines[1:], 1):
+                    if l.strip() == "---":
+                        body_start = i + 1
+                        break
+
             # 检查文档是否引用了 DISCLAIMER.md
             refs_disclaimer_file = bool(
                 re.search(r"DISCLAIMER\.md|免责.*文件|见.*免责", text)
@@ -257,7 +266,9 @@ class ComplianceChecker:
             for lineno, l in enumerate(lines, 1):
                 if re.search(r"不构成投资建议", l):
                     has_investment = True
-                    if lineno <= max(5, len(lines) // 4):
+                    rel_lineno = lineno - body_start + 1 if body_start else lineno
+                    body_len = len(lines) - body_start if body_start else len(lines)
+                    if rel_lineno <= max(5, body_len // 4):
                         position = "early"
                     else:
                         position = "late"
