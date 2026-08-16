@@ -1,0 +1,1841 @@
+{
+  "$schema": "SkillHub Compliance Rules v1.0",
+  "description": "SkillHub上架合规检查规则库，基于中国相关法律法规。适用于国内AI应用市场（如腾讯SkillHub、百度智能体等）的开发者上架合规自查。",
+  "version": "1.3.1",
+  "last_updated": "2026-07-20",
+  "maintainer": "ChengQian (成乾)",
+  "notes": "本规则库仅供参考，不构成法律意见。实际合规要求以监管部门最新政策为准。规则匹配基于关键词扫描，误报率和漏报率无法完全消除。",
+  "categories": {
+    "FINANCE": "金融敏感用语 — 涉及证券投资咨询、荐股、收益承诺等受监管领域",
+    "DISCLAIMER": "免责声明检查 — 金融/合规类技能必须具有显眼位置的法律及投资免责声明",
+    "EXAGGERATION": "极限词/夸大描述 — 广告法禁止的绝对化用语和不正当对比",
+    "SECURITY": "安全红线 — 可能导致任意代码执行的危险调用",
+    "RECOMMENDATIONS": "综合建议 — 文档完整性等最佳实践",
+    "PRIVACY": "数据隐私与个人信息保护 — 涉及个人信息收集、处理、出境的合规要求，基于《个人信息保护法》及配套法规",
+    "REGULATORY": "监管合规 — 涵盖 ICP 备案、AIGC 标识、算法备案、未成年人保护等专项监管要求",
+    "SUPPLY_CHAIN": "供应链安全 — 外部脚本获取、代码混淆、未固定版本依赖等供应链攻击向量",
+    "MCP": "MCP安全管理 — MCP权限最小化、工具权限声明、能力范围声明",
+    "OUTPUT": "输出处理安全 — 未验证输出注入、跨上下文输出、无界输出",
+    "ADVISORY": "建议性告警 — 描述与行为不一致、文档完整性、最佳实践"
+  },
+  "severity_levels": {
+    "critical": 30,
+    "high": 15,
+    "medium": 5,
+    "low": 2
+  },
+  "scoring_model": {
+    "base_score": 100,
+    "redline_penalty": "一票否决 — 任何 redline=true 的规则触发即判定为 REJECT，score=0",
+    "deduction": "按照 severity 级别扣分，优先级 crit(30) > high(15) > medium(5) > low(2)",
+    "conclusion_thresholds": {
+      "PASS": "score >= 70 且无 redline 触发",
+      "NEEDS_FIX": "score >= 40 且 < 70 且无 redline 触发",
+      "REJECT": "score < 40 或任意 redline=true 规则触发"
+    },
+    "advisory_scoring": {
+      "separate_track": true,
+      "description": "建议性告警独立于法律合规评分之外，按平台规范/最佳实践单独计分。legal_compliance 为法规评分，advisory 为平台告警评分。advisory 告警不影响 LEQUAL_REJECT/PASS 判定。",
+      "advisory_deduction": "每条告警 -2 分（不影响 compliance score）",
+      "advisory_base": 100,
+      "advisory_thresholds": {
+        "CLEAN": "advisory_score >= 90",
+        "CAUTION": "advisory_score >= 70",
+        "WARN": "advisory_score < 70"
+      }
+    }
+  },
+  "rules": [
+    {
+      "id": "FIN-001",
+      "name": "证券投资推荐",
+      "category": "FINANCE",
+      "severity": "high",
+      "redline": true,
+      "description": "检测到明确的证券买卖推荐用语，如推荐买入/卖出、目标价预测等。未经批准的证券投资咨询行为受《证券法》严格监管",
+      "behavioral": false,
+      "patterns": [
+        "推荐买入",
+        "推荐卖出",
+        "买入评级",
+        "卖出评级",
+        "目标价",
+        "看到.*元",
+        "翻倍",
+        "涨停预期",
+        "建议买入",
+        "建议卖出",
+        "强烈推荐买入",
+        "强烈推荐卖出",
+        "买点出现",
+        "卖点出现"
+      ],
+      "scan_targets": [
+        "docs",
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "用户输入",
+        "用户提供",
+        "不构成投资建议",
+        "仅供参考",
+        "用户自行决定"
+      ],
+      "legal_source": "《证券法》（2019年修订，2020年3月1日施行）第一百六十条：未经国务院证券监督管理机构批准，任何单位和个人不得从事证券投资咨询业务。",
+      "authority_type": "law"
+    },
+    {
+      "id": "FIN-002",
+      "name": "保证收益承诺",
+      "category": "FINANCE",
+      "severity": "high",
+      "redline": true,
+      "description": "检测到收益率保证、保本承诺等保证性用语。对未来收益作出保证性承诺属于《广告法》禁止行为",
+      "behavioral": false,
+      "patterns": [
+        "稳赚",
+        "保本",
+        "无风险",
+        "100%.*收益",
+        "guaranteed.*return",
+        "risk[- ]?free",
+        "保证收益",
+        "保底收益",
+        "固定收益.*%",
+        "每年.*%",
+        "月收益.*%",
+        "稳赚不赔",
+        "零风险",
+        "绝对安全"
+      ],
+      "scan_targets": [
+        "docs",
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "历史收益率",
+        "历史年化",
+        "过去",
+        "仅供参考",
+        "不保证未来收益",
+        "查看历史",
+        "回溯测试",
+        "回测",
+        "模拟收益",
+        "假设",
+        "假设性"
+      ],
+      "legal_source": "《广告法》（2015年修订，2021年修正，2021年修正生效）第二十五条：招商等有投资回报预期的商品或者服务广告，不得对未来效果、收益或者与其相关的情况作出保证性承诺。",
+      "authority_type": "law"
+    },
+    {
+      "id": "FIN-003",
+      "name": "投资建议用语",
+      "category": "FINANCE",
+      "severity": "medium",
+      "redline": false,
+      "description": "检测到通常用于投资建议的敏感词汇，虽不直接构成荐股，但需谨慎使用并添加适当免责声明",
+      "behavioral": false,
+      "patterns": [
+        "投资建议",
+        "理财建议",
+        "资产配置建议",
+        "炒股",
+        "炒股票",
+        "必涨",
+        "必跌",
+        "一定会涨",
+        "一定会跌",
+        "强烈买入",
+        "强烈卖出",
+        "增持",
+        "减持",
+        "加仓",
+        "减仓",
+        "建仓",
+        "抄底",
+        "逃顶"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "用户输入",
+        "用户提供",
+        "用户自行",
+        "不构成投资建议",
+        "技术分析",
+        "数据分析",
+        "合规检查",
+        "analysis tool",
+        "分析工具",
+        "分析功能",
+        "分析模块",
+        "不构成.*建议"
+      ],
+      "legal_source": "《关于加强证券期货信息传播管理的若干规定》第六条：传播证券期货信息，必须遵守国家有关规定，不得传播虚假信息",
+      "authority_type": "regulation",
+      "self_describing_markers": [
+        "notebook",
+        "数据分析",
+        "exploration",
+        "experiment",
+        "科研",
+        "学术"
+      ]
+    },
+    {
+      "id": "FIN-004",
+      "name": "需资质用语",
+      "category": "FINANCE",
+      "severity": "medium",
+      "redline": false,
+      "description": "检测到需要特定资质才能使用的专业金融服务术语，开发者若无相应资质不应使用这些表述",
+      "behavioral": false,
+      "patterns": [
+        "证券咨询",
+        "投资顾问",
+        "基金管理",
+        "证券投资咨询",
+        "持牌",
+        "证监会",
+        "监管备案",
+        "正规金融机构",
+        "资产管理",
+        "理财规划师",
+        "证券分析师"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "查看.*证监会",
+        "证监会.*公告",
+        "证券法",
+        "符合.*监管",
+        "非持牌",
+        "不涉及.*证券咨询",
+        "不涉及.*投资顾问",
+        "学习参考",
+        "教育",
+        "教学"
+      ],
+      "legal_source": "《证券法》第一百六十条：未经国务院证券监督管理机构批准，任何单位和个人不得从事证券投资咨询业务",
+      "authority_type": "law"
+    },
+    {
+      "id": "FIN-005",
+      "name": "走势分析声明要求",
+      "category": "FINANCE",
+      "severity": "low",
+      "redline": false,
+      "description": "检测到技术分析/走势分析类用语，虽不一定违规但建议在显眼位置添加风险提示声明，明确工具仅供学习和研究参考",
+      "behavioral": false,
+      "patterns": [
+        "走势分析",
+        "技术分析",
+        "K线分析",
+        "趋势分析",
+        "行情分析",
+        "收益率",
+        "回报率",
+        "年化",
+        "技术指标",
+        "均线分析",
+        "MACD",
+        "RSI",
+        "布林带",
+        "股票分析",
+        "股票预测",
+        "股价预测",
+        "市场预测"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "风险趋势分析",
+        "审计趋势分析",
+        "历史风险趋势",
+        "数据趋势分析",
+        "销售趋势",
+        "用户趋势",
+        "业绩趋势",
+        "财务趋势",
+        "历史年化收益",
+        "过去",
+        "仅供参考"
+      ],
+      "legal_source": "《证券、期货投资咨询管理暂行办法》（1998年4月1日施行）第三条：从事证券、期货投资咨询业务，必须依照本办法的规定，取得中国证监会的业务许可。",
+      "self_describing": true,
+      "self_describing_markers": [
+        "版本",
+        "version",
+        "minOpenClawVersion",
+        "版本号"
+      ],
+      "authority_type": "regulation"
+    },
+    {
+      "id": "DISC-001",
+      "name": "投资免责声明缺失",
+      "category": "DISCLAIMER",
+      "severity": "high",
+      "redline": false,
+      "description": "检测到金融建议类用语但缺少必要的投资免责声明。根据《证券、期货投资咨询管理暂行办法》第二十四条，证券投资咨询机构及其人员不得对投资行为作出确定性判断。",
+      "behavioral": true,
+      "depends_on": [
+        "FIN-001",
+        "FIN-002",
+        "FIN-003",
+        "FIN-005"
+      ],
+      "look_for": [
+        "不构成投资建议",
+        "不构成任何投资建议",
+        "仅供参考.*不构成投资建议",
+        "投资风险.*自行承担",
+        "风险提示.*投资",
+        "本工具.*不构成投资建议",
+        "免责声明.*投资"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "《证券、期货投资咨询管理暂行办法》（1998年4月1日施行）第二十四条：证券投资咨询机构及其投资咨询人员，不得对投资行为作出确定性判断。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "DISC-002",
+      "name": "法律免责声明缺失",
+      "category": "DISCLAIMER",
+      "severity": "high",
+      "redline": false,
+      "description": "合规检查类技能缺少必要的法律免责声明。涉及法律合规自动化的技能建议添加免责声明，明确工具仅为辅助参考用途",
+      "behavioral": true,
+      "depends_on": [],
+      "look_for": [
+        "不构成法律建议",
+        "不构成任何法律建议",
+        "法律意见.*咨询律师",
+        "仅供参考.*不构成法律",
+        "免责声明.*法律",
+        "本工具.*仅供参考.*不构成法律",
+        "as-is",
+        "as is",
+        "provided without warranty",
+        "not intended as legal advice",
+        "for reference only"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "《律师法》第十四条：没有取得律师执业证书的人员，不得以律师名义从事法律服务业务",
+      "authority_type": "law"
+    },
+    {
+      "id": "DISC-003",
+      "name": "通用免责声明缺失",
+      "category": "DISCLAIMER",
+      "severity": "medium",
+      "redline": false,
+      "description": "未在显眼位置发现免责声明。最佳实践建议在README或SKILL.md开头部分添加免责声明，声明工具责任范围",
+      "behavioral": true,
+      "depends_on": [],
+      "look_for": [
+        "免责声明",
+        "免责",
+        "Disclaimer",
+        "disclaimer",
+        "limitation of liability",
+        "ALL WARRANTIES",
+        "NO WARRANTY",
+        "使用风险.*自行承担",
+        "后果自负"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "《民法典》第一千一百六十五条：行为人因过错侵害他人民事权益造成损害的，应当承担侵权责任",
+      "authority_type": "law"
+    },
+    {
+      "id": "EXA-001",
+      "name": "绝对化用语",
+      "category": "EXAGGERATION",
+      "severity": "medium",
+      "redline": false,
+      "description": "检测到《广告法》禁止的绝对化用语，如行业第一、最好等。在SkillHub上架的应用即使不构成商业广告，也可能被平台要求整改",
+      "behavioral": false,
+      "patterns": [
+        "最.*的",
+        "第[一二三四五六七八九十].*的",
+        "全网(唯一|最好|第一|领先|首创)",
+        "唯一.*的",
+        "(遥遥领先|行业领先|领先.*水平)",
+        "(无与伦比|无可替代|无以伦比)",
+        "(最佳|最优|最强|最好|顶级|卓越)",
+        "(顶尖|标杆|标杆级|旗舰级)",
+        "(首创|独创|率先|首家)"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "第三方工具",
+        "最大输出",
+        "最大范围内",
+        "最佳时机",
+        "最小输入",
+        "最大程度",
+        "最高标准",
+        "最佳路径",
+        "尽最大努力",
+        "最低限度",
+        "最佳性价比",
+        "最大值",
+        "最小化",
+        "最佳实践",
+        "第三方数据",
+        "第三方库",
+        "最大可能性",
+        "第三方平台",
+        "最大化",
+        "最佳方案",
+        "第三方模块",
+        "第三方服务",
+        "在法律允许的最大范围内",
+        "最小值",
+        "最小必要",
+        "第三方API"
+      ],
+      "legal_source": "《广告法》（2015年修订，2021年修正）第九条：广告不得使用国家级、最高级、最佳等用语。",
+      "authority_type": "law"
+    },
+    {
+      "id": "EXA-002",
+      "name": "贬低性对比表述",
+      "category": "EXAGGERATION",
+      "severity": "medium",
+      "redline": false,
+      "description": "检测到与其他产品或服务进行对比并暗示自身更优的表述。即使未直接点名，此类对比也可能被认定为不正当竞争",
+      "behavioral": false,
+      "patterns": [
+        "比.*(好|强|优秀|专业|厉害|先进|高效|稳定|可靠|优越|出色)",
+        "优于.*",
+        "胜于.*",
+        "碾压.*",
+        "吊打.*",
+        "完胜.*",
+        "完爆.*"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "by",
+        "BY",
+        "比较好",
+        "相比.*更",
+        "比较分析",
+        "对比分析",
+        "优势对比",
+        "by comparing",
+        "compare with",
+        "comparison",
+        "百分比",
+        "比例",
+        "比率",
+        "同比增长",
+        "环比增长",
+        "比上",
+        "比前一"
+      ],
+      "legal_source": "《广告法》（2015年修订，2021年修正）第十三条：广告不得贬低其他生产经营者的商品或者服务。",
+      "authority_type": "law"
+    },
+    {
+      "id": "EXA-003",
+      "name": "虚假或引人误解的描述",
+      "category": "EXAGGERATION",
+      "severity": "high",
+      "redline": false,
+      "description": "检测到可能构成虚假宣传的描述用语。SkillHub平台要求技能描述真实准确，不得夸大功能或误导用户",
+      "behavioral": false,
+      "patterns": [
+        "自动.*全自动",
+        "无需任何操作",
+        "完全无人值守",
+        "100%.*准确",
+        "零错误",
+        "绝对准确",
+        "完全取代",
+        "完全替代.*人类",
+        "与.*完全相同",
+        "完美.*解决"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "尽可能",
+        "尽量",
+        "在.*条件下",
+        "特定场景",
+        "限定范围",
+        "取决于",
+        "视.*而定"
+      ],
+      "legal_source": "《广告法》（2015年修订，2021年修正）第四条：广告不得含有虚假或者引人误解的内容，不得欺骗、误导消费者。",
+      "authority_type": "law"
+    },
+    {
+      "id": "SEC-001",
+      "name": "危险代码执行",
+      "category": "SECURITY",
+      "severity": "critical",
+      "redline": true,
+      "description": "检测到 subprocess、eval、exec、os.system 等危险调用。SkillHub 平台安全规范明确禁止可能导致任意代码执行的系统调用",
+      "behavioral": false,
+      "patterns": [
+        "subprocess\\.(Popen|call|run|check_call|check_output|getstatusoutput|getoutput)",
+        "\\beval\\s*\\(",
+        "\\bexec\\s*\\(",
+        "os\\.system\\s*\\(",
+        "os\\.popen\\s*\\(",
+        "os\\.execl\\s*\\(",
+        "os\\.execle\\s*\\(",
+        "os\\.execlp\\s*\\(",
+        "os\\.execv\\s*\\(",
+        "os\\.execve\\s*\\(",
+        "os\\.execvp\\s*\\(",
+        "os\\.fork\\s*\\(",
+        "shutil\\.rmtree\\s*\\(",
+        "__import__\\s*\\(",
+        "compile\\s*\\(",
+        "pty\\.spawn\\s*\\(",
+        "ctypes\\.(CDLL|windll|cdll|LibraryLoader)"
+      ],
+      "scan_targets": [
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "subprocess.*被注释",
+        "subprocess.*commanded",
+        "#.*subprocess",
+        "#.*eval",
+        "#.*exec",
+        "被注释.*subprocess",
+        "不建议.*subprocess",
+        "不应.*subprocess",
+        "re\\.compile"
+      ],
+      "legal_source": "SkillHub 平台安全规范第3条：禁止使用可能执行任意代码的系统调用",
+      "authority_type": "platform_policy"
+    },
+    {
+      "id": "SEC-002",
+      "name": "动态代码执行（低风险）",
+      "category": "SECURITY",
+      "severity": "low",
+      "redline": false,
+      "description": "检测到 importlib 等动态加载机制。在加载已知本地模块时风险较低，但建议使用直接 import 替代。",
+      "behavioral": false,
+      "patterns": [
+        "execfile",
+        "code\\.Interact",
+        "code\\.compile_command"
+      ],
+      "scan_targets": [
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "PYTHONDONTWRITEBYTECODE",
+        "__import__.*builtin"
+      ],
+      "legal_source": "SkillHub 平台安全规范：慎用动态模块加载机制",
+      "authority_type": "platform_policy"
+    },
+    {
+      "id": "SEC-003",
+      "name": "网络请求（需声明）",
+      "category": "SECURITY",
+      "severity": "high",
+      "redline": false,
+      "description": "检测到网络请求相关调用。国内平台对涉及网络通信的技能有更高的合规要求，需在功能描述中如实声明网络行为",
+      "behavioral": false,
+      "patterns": [
+        "requests\\.(get|post|put|delete|head|options|request|Session)",
+        "urllib\\.(request|parse)\\.(urlopen|urlretrieve)",
+        "http\\.(client|server)",
+        "aiohttp\\.ClientSession",
+        "httpx\\.(Client|AsyncClient)",
+        "websocket",
+        "urllib3",
+        "curl_cffi",
+        "urlopen"
+      ],
+      "scan_targets": [
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "#.*requests",
+        "被注释.*requests",
+        "prompt.*requests",
+        "用户请求",
+        "用户输入"
+      ],
+      "legal_source": "《网络安全法》（2017年6月1日施行）第四十一条：网络运营者收集、使用个人信息，应当遵循合法、正当、必要的原则。第二十一条：网络运营者应当采取技术措施防止网络数据泄露。",
+      "authority_type": "law"
+    },
+    {
+      "id": "SEC-004",
+      "name": "未固定版本依赖",
+      "category": "SECURITY",
+      "severity": "medium",
+      "redline": false,
+      "description": "requirements.txt 中的依赖未固定版本号。未固定版本的依赖可能在更新后引入破坏性变更或安全漏洞",
+      "behavioral": false,
+      "patterns": [],
+      "scan_targets": [
+        "all"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "SkillHub 平台安全规范：第三方依赖应固定版本号以避免供应链攻击",
+      "authority_type": "platform_policy"
+    },
+    {
+      "id": "REC-001",
+      "name": "缺少README文件",
+      "category": "RECOMMENDATIONS",
+      "severity": "low",
+      "redline": false,
+      "description": "缺少 README.md 文件。建议提供详细的使用说明、参数说明和示例以便用户快速上手",
+      "behavioral": true,
+      "missing_file": "README.md",
+      "scan_targets": [
+        "all"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "SkillHub 平台最佳实践：建议提供详细的 README 文档",
+      "authority_type": "best_practice"
+    },
+    {
+      "id": "REC-002",
+      "name": "缺少CHANGELOG文件",
+      "category": "RECOMMENDATIONS",
+      "severity": "low",
+      "redline": false,
+      "description": "缺少 CHANGELOG.md 文件。建议记录版本变更历史，方便用户跟踪功能更新和问题修复",
+      "behavioral": true,
+      "missing_file": "CHANGELOG.md",
+      "scan_targets": [
+        "all"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "SkillHub 平台最佳实践：建议提供版本变更日志",
+      "authority_type": "best_practice"
+    },
+    {
+      "id": "REC-003",
+      "name": "README过于简短",
+      "category": "RECOMMENDATIONS",
+      "severity": "low",
+      "redline": false,
+      "description": "README.md 内容过于简短（少于300字），可能无法充分说明技能功能和用法",
+      "behavioral": true,
+      "min_chars": 300,
+      "scan_targets": [
+        "all"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "SkillHub 平台最佳实践：README 应包含功能说明、使用前提、参数说明和完整示例",
+      "authority_type": "best_practice"
+    },
+    {
+      "id": "REC-004",
+      "name": "缺少 requirements.txt",
+      "category": "RECOMMENDATIONS",
+      "severity": "low",
+      "redline": false,
+      "description": "检测到 Python 脚本但缺少 requirements.txt 文件。明确声明依赖信息有助于用户正确安装和运行",
+      "behavioral": true,
+      "missing_file": "requirements.txt",
+      "scan_targets": [
+        "all"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "SkillHub 平台最佳实践：Python 技能应提供 requirements.txt 声明外部依赖",
+      "authority_type": "best_practice"
+    },
+    {
+      "id": "PRI-001",
+      "name": "个人信息收集声明",
+      "category": "PRIVACY",
+      "severity": "high",
+      "redline": false,
+      "description": "检测到技能可能收集个人信息（如用户输入数据、文件内容），但未声明数据处理方式。根据《个人信息保护法》第十七条，处理个人信息前应告知处理目的、方式和范围。",
+      "behavioral": false,
+      "patterns": [
+        "收集用户",
+        "读取文件",
+        "上传数据",
+        "store.*user",
+        "collect.*data",
+        "用户.*信息"
+      ],
+      "scan_targets": [
+        "docs",
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "不收集",
+        "不存储",
+        "不上传",
+        "do not collect",
+        "do not store",
+        "locally",
+        "本地"
+      ],
+      "legal_source": "《个人信息保护法》（2021年11月1日施行）第十七条：个人信息处理者在处理个人信息前，应当以显著方式、清晰易懂的语言真实、准确、完整地告知处理目的、处理方式、处理的个人信息种类和保存期限。",
+      "self_describing": true,
+      "self_describing_markers": [
+        "协议",
+        "条款",
+        "告知",
+        "隐私政策",
+        "声明",
+        "同意",
+        "权利"
+      ],
+      "authority_type": "law"
+    },
+    {
+      "id": "PRI-002",
+      "name": "用户同意机制",
+      "category": "PRIVACY",
+      "severity": "high",
+      "redline": false,
+      "description": "技能涉及处理个人信息时，需确保已取得用户同意。根据《个人信息保护法》第十四条，处理个人信息应取得个人同意。",
+      "behavioral": false,
+      "patterns": [
+        "处理个人信息",
+        "personal.*data",
+        "用户数据",
+        "用户隐私"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不收集",
+        "不处理",
+        "经用户同意",
+        "用户授权",
+        "user consent",
+        "with.*permission",
+        "明确同意",
+        "用户自行选择",
+        "用户主动提供"
+      ],
+      "legal_source": "《个人信息保护法》（2021年11月1日施行）第十四条：基于个人同意处理个人信息的，该同意应当由个人在充分知情的前提下自愿、明确作出。",
+      "authority_type": "law"
+    },
+    {
+      "id": "PRI-003",
+      "name": "数据出境合规",
+      "category": "PRIVACY",
+      "severity": "high",
+      "redline": false,
+      "description": "检测到技能可能涉及中国用户个人数据跨境传输。根据《数据出境安全评估办法》，向境外提供个人信息需通过安全评估。",
+      "behavioral": false,
+      "patterns": [
+        "跨境",
+        "数据出境",
+        "cross.?border",
+        "海外服务器",
+        "境外",
+        "transfer.*data.*overseas",
+        "upload.*cloud",
+        "send.*server"
+      ],
+      "scan_targets": [
+        "docs",
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "本地处理",
+        "不上传",
+        "不传输",
+        "不跨境",
+        "local only",
+        "offline",
+        "no network"
+      ],
+      "legal_source": "《数据出境安全评估办法》（2022年9月1日施行）第四条：数据处理者向境外提供个人信息，应当通过所在地省级网信部门向国家网信部门申报数据出境安全评估。",
+      "self_describing": true,
+      "self_describing_markers": [
+        "跨境.*合规",
+        "数据出境.*评估",
+        "安全评估",
+        "申报",
+        "场景"
+      ],
+      "authority_type": "regulation"
+    },
+    {
+      "id": "REG-001",
+      "name": "ICP备案号",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能描述涉及经营性互联网信息服务，但未提及ICP备案号。根据《互联网信息服务管理办法》第七条，经营性互联网信息服务实行许可制度。",
+      "behavioral": false,
+      "patterns": [
+        "在线服务",
+        "收费",
+        "订阅",
+        "付费",
+        "会员",
+        "subscription",
+        "premium",
+        "paid"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "ICP",
+        "备案",
+        "非经营性",
+        "免费",
+        "free",
+        "open.?source"
+      ],
+      "legal_source": "《互联网信息服务管理办法》（国务院令第292号，2000年公布，2011年修订）第七条：从事经营性互联网信息服务，应当向省、自治区、直辖市电信管理机构申请办理互联网信息服务增值电信业务经营许可证。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "REG-002",
+      "name": "AIGC内容标识",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能生成AI内容但未声明AIGC标识要求。根据《生成式人工智能服务管理暂行办法》第十二条，提供者应当对图片、视频等生成内容进行标识。\n\n推荐模板：\n- \"本内容由 AI 辅助生成，仅供参考\"\n- \"该 PPT 由 AI 基于对话内容自动生成，建议人工审核后使用\"\n- \"此分析报告由 AI 生成，不构成专业建议，请结合实际情况判断\"",
+      "behavioral": false,
+      "patterns": [
+        "生成.*内容",
+        "AI.*生成",
+        "自动.*创作",
+        "智能.*写作",
+        "generate.*content",
+        "AI.*create",
+        "自动生成"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "AIGC",
+        "标识",
+        "label",
+        "人工智能生成",
+        "AI生成",
+        "生成式人工智能",
+        "AI标注"
+      ],
+      "legal_source": "《生成式人工智能服务管理暂行办法》（2023年8月15日施行）第十二条：提供者应当按照《互联网信息服务深度合成管理规定》对图片、视频等生成内容进行标识。",
+      "authority_type": "regulation",
+      "recommendation": "在 SKILL.md 或 README.md 中添加 AIGC 标识声明，示例：\n- **AIGC 标识**：生成的 PPT 属于 AI 辅助内容，根据《生成式人工智能服务管理暂行办法》第十二条，用户在公开使用时应标注\"本内容由 AI 辅助生成\"或类似标识"
+    },
+    {
+      "id": "REG-003",
+      "name": "算法备案要求",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能使用推荐或排序算法可能需备案。根据《互联网信息服务算法推荐管理规定》第七条，算法推荐服务提供者应当落实算法备案义务。",
+      "behavioral": false,
+      "patterns": [
+        "推荐算法",
+        "个性化推荐",
+        "智能推荐",
+        "排序算法",
+        "推荐系统",
+        "recommendation",
+        "personalized.*recommend",
+        "ranking",
+        "算力调度",
+        "算法.*排序"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不涉及",
+        "无算法",
+        "not.*algorithm",
+        "simple.*sort",
+        "RECOMMENDATIONS",
+        "推荐系统",
+        "推荐.*检查"
+      ],
+      "legal_source": "《互联网信息服务算法推荐管理规定》（2022年3月1日施行）第七条：算法推荐服务提供者应当落实算法安全主体责任。第二十四条：具有舆论属性或者社会动员能力的算法推荐服务提供者应当在提供服务之日起十个工作日内履行算法备案手续。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "REG-004",
+      "name": "未成年人保护",
+      "category": "REGULATORY",
+      "severity": "high",
+      "redline": false,
+      "description": "技能面向或可能涉及未成年人用户，但缺少未成年人保护声明。根据《未成年人网络保护条例》，网络产品和服务提供者应当建立健全未成年人保护机制。",
+      "behavioral": false,
+      "patterns": [
+        "教育",
+        "学习",
+        "儿童",
+        "学生",
+        "青少年",
+        "education",
+        "children",
+        "student",
+        "minor"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "未成年人",
+        "minors",
+        "未满.*岁",
+        "家长监护",
+        "未成年人保护",
+        "不适用于",
+        "not.*for.*children",
+        "for.*adult",
+        "仅供.*学习",
+        "仅供.*参考",
+        "不构成.*建议"
+      ],
+      "legal_source": "《未成年人网络保护条例》（2024年1月1日施行）第二十三条：网络服务提供者应当建立便捷、合理、有效的投诉举报渠道。第四十二条：网络产品和服务提供者应当建立健全未成年人保护机制。",
+      "self_describing": true,
+      "self_describing_markers": [
+        "案例",
+        "特殊保护",
+        "保护要求",
+        "保护机制",
+        "保护制度",
+        "保护专门",
+        "保护检查",
+        "保护措施",
+        "保护条款",
+        "保护.*方案",
+        "示例",
+        "模板",
+        "场景",
+        "挑战",
+        "解决方案",
+        "方案"
+      ],
+      "authority_type": "regulation"
+    },
+    {
+      "id": "REG-005",
+      "name": "医疗卫生合规",
+      "category": "REGULATORY",
+      "severity": "critical",
+      "redline": true,
+      "description": "技能描述涉及医疗诊断、治疗建议等专业医疗行为。根据《医疗机构管理条例》第二十三条，任何单位和个人未取得《医疗机构执业许可证》不得开展诊疗活动。",
+      "behavioral": false,
+      "patterns": [
+        "诊断",
+        "治疗.*建议",
+        "处方",
+        "医疗.*建议",
+        "用药.*建议",
+        "dianosis",
+        "treatment.*advice",
+        "prescription",
+        "medical.*advice"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不构成医疗建议",
+        "非医疗",
+        "not.*medical",
+        "非诊断",
+        "仅供参考",
+        "not.*diagnos",
+        "非处方"
+      ],
+      "legal_source": "《医疗机构管理条例》（2022年修订）第二十三条：任何单位或者个人，未取得《医疗机构执业许可证》，不得开展诊疗活动。《互联网诊疗管理办法（试行）》（国卫医发〔2018〕25号）对互联网诊疗活动有进一步的准入要求。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "REG-006",
+      "name": "教育培训合规",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能涉及义务教育阶段学科培训或课外辅导内容。根据《关于进一步减轻义务教育阶段学生作业负担和校外培训负担的意见》（双减政策），学科类校外培训受到严格限制。",
+      "behavioral": false,
+      "patterns": [
+        "学科培训",
+        "课外辅导",
+        "作业辅导",
+        "应试",
+        "考试.*辅导",
+        "tutor",
+        "exam.*prep",
+        "homework.*help"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "非学科",
+        "素质教育",
+        "兴趣",
+        "hobby",
+        "素养",
+        "不涉及",
+        "not.*academic"
+      ],
+      "legal_source": "《关于进一步减轻义务教育阶段学生作业负担和校外培训负担的意见》（2021年7月24日，中共中央办公厅、国务院办公厅印发）：各地不再审批新的面向义务教育阶段学生的学科类校外培训机构，严禁超标超前培训。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "REG-007",
+      "name": "虚拟资产/代币合规",
+      "category": "REGULATORY",
+      "severity": "critical",
+      "redline": true,
+      "description": "技能涉及虚拟货币、代币发行或加密货币交易。根据《关于防范代币发行融资风险的公告》，代币发行融资活动被禁止。",
+      "behavioral": false,
+      "patterns": [
+        "代币",
+        "虚拟货币",
+        "加密货币",
+        "\\bICO\\b",
+        "挖矿",
+        "区块链.*融资",
+        "token.*sale",
+        "cryptocurrency",
+        "crypto.*invest",
+        "mining.*reward",
+        "NFT.*投资",
+        "数字.*资产.*交易"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "icon.*token",
+        "MCP.?token",
+        "API.?token",
+        "access.?token",
+        "refresh.?token",
+        "链上分析",
+        "仅供参考",
+        "figma",
+        "分析工具",
+        "design system",
+        "token.*icon",
+        "knowledge.*only",
+        "design.?token",
+        "token.*style",
+        "bearer.?token",
+        "tool.?token",
+        "component property",
+        "禁止",
+        "token.*system",
+        "教育目的",
+        "for.*educational",
+        "Unicode",
+        "不构成",
+        "token.*variable",
+        "Figma"
+      ],
+      "legal_source": "《关于防范代币发行融资风险的公告》（2017年9月4日，中国人民银行等七部委联合发布）：代币发行融资（ICO）本质上是一种未经批准非法公开融资的行为。自公告发布之日起，各类代币发行融资活动应当立即停止。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "REG-008",
+      "name": "网络安全等级保护",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能作为网络产品或服务应关注等级保护要求。根据《网络安全法》和《信息安全等级保护管理办法》，等级保护是法定义务。",
+      "behavioral": false,
+      "patterns": [
+        "等保",
+        "等级保护",
+        "安全等级",
+        "网络安全.*等级",
+        "security.*level",
+        "等保测评"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不涉及",
+        "无.*等保",
+        "not.*required"
+      ],
+      "legal_source": "《网络安全法》（2017年6月1日施行）第三十一条：国家对关键信息基础设施实行重点保护。《网络安全等级保护条例》配套实施。",
+      "authority_type": "law"
+    },
+    {
+      "id": "REG-009",
+      "name": "反不正当竞争",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能描述可能涉及贬低竞争对手或进行不恰当的对比。根据《反不正当竞争法》第十一条，经营者不得编造、传播虚假信息损害竞争对手。",
+      "behavioral": false,
+      "patterns": [
+        "优于.*同类",
+        "碾压",
+        "吊打.*竞品",
+        "秒杀.*同类",
+        "完胜.*某某",
+        "吊打",
+        "差.*太多",
+        "彻底.*淘汰"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "对比.*分析",
+        "比较.*分析",
+        "差异",
+        "comparison",
+        "比较表",
+        "性能.*对比",
+        "benchmark"
+      ],
+      "legal_source": "《反不正当竞争法》（2019年修正）第十一条：经营者不得编造、传播虚假信息或者误导性信息，损害竞争对手的商业信誉、商品声誉。",
+      "authority_type": "law"
+    },
+    {
+      "id": "SEC-005",
+      "name": "外部脚本获取",
+      "category": "SUPPLY_CHAIN",
+      "severity": "high",
+      "redline": false,
+      "description": "检测到从外部URL动态拉取并执行脚本的模式（curl|bash, wget|sh等）。这种运行时获取外部代码的行为存在供应链安全风险，攻击者可劫持URL指向恶意代码。建议将外部依赖打包在发布包中。",
+      "behavioral": false,
+      "patterns": [
+        "curl\\s+.*https?://.*\\|\\s*(ba|z)?sh",
+        "wget\\s+.*https?://.*-O\\s*-\\s*\\|\\s*(ba|z)?sh",
+        "wget\\s+.*https?://.*-O\\s*-\\s*\\|\\s*sh",
+        "curl\\s+.*https?://.*-o\\s*\\S*\\s*&&\\s*(ba|z)?sh",
+        "curl\\s+.*https?://.*\\|\\s*python",
+        "(fetch|download).*https?://.*(script|install)",
+        "npm\\s+install\\s+-g\\s+\\S+@latest",
+        "pip\\s+install\\s+-U\\s+\\S+\\s*$",
+        "pip3?\\s+install\\s+--upgrade\\s+\\S+\\s*$"
+      ],
+      "scan_targets": [
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "被注释",
+        "#.*curl",
+        "#.*wget",
+        "不应.*使用",
+        "不建议"
+      ],
+      "legal_source": "SkillHub 平台安全规范 — 供应链安全：应避免运行时从外部获取并执行未经审计的代码。NIST SP 800-161 供应链风险管理实践。",
+      "authority_type": "platform_policy"
+    },
+    {
+      "id": "SEC-006",
+      "name": "代码混淆",
+      "category": "SUPPLY_CHAIN",
+      "severity": "high",
+      "redline": false,
+      "description": "检测到代码混淆或编码绕过模式（base64解码执行、hex解码执行等）。混淆代码会绕过静态审查，隐藏实际行为，是恶意软件和攻击代码的常见特征。",
+      "behavioral": false,
+      "patterns": [
+        "base64\\.(b64decode|urlsafe_b64decode|standard_b64decode|decodebytes)\\s*\\(",
+        "bytes\\.fromhex\\s*\\(.*\\)\\s*\\.\\s*decode",
+        "codecs\\.decode\\s*\\(.*,\\s*['\\\"]hex['\\\"]",
+        "codecs\\.decode\\s*\\(.*,\\s*['\\\"]rot",
+        "(exec|eval)\\s*\\(.*(?:b64|fromhex|\\\\x|\\\\u00)",
+        "compile\\s*\\(.*base64"
+      ],
+      "scan_targets": [
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "#.*base64",
+        "base64.*示例",
+        "base64.*demo",
+        "被注释",
+        "```"
+      ],
+      "legal_source": "SkillHub 平台安全规范 — 行为AST：应避免使用编码/混淆手段绕过代码审查。CWE-318: Obfuscated Code Analysis。",
+      "authority_type": "platform_policy"
+    },
+    {
+      "id": "SEC-007",
+      "name": "MCP权限过度声明",
+      "category": "MCP",
+      "severity": "high",
+      "redline": true,
+      "description": "检测到MCP配置或声明中使用了通配符权限（*）或未声明具体工具的能力范围。根据最小权限原则，MCP权限应精确到具体工具和资源，避免使用通配符。",
+      "behavioral": false,
+      "patterns": [
+        "\"\\*\"",
+        "'\\*'",
+        "permission.*\\*",
+        "access.*\\*"
+      ],
+      "scan_targets": [
+        "scripts",
+        "docs"
+      ],
+      "exclude_patterns": [
+        "禁止.*\\*",
+        "不应.*\\*",
+        "避免.*通配",
+        "避免.*wildcard",
+        "最小权限",
+        "least privilege",
+        ":<\\d+",
+        ":>\\+?\\d+",
+        "{\\d+:",
+        "=\\s*\"\\*\"",
+        "else\\s+\"\\*\"",
+        "==\\s+\"\\*\"",
+        "return\\s+\"\\*\"",
+        "color\\s*=",
+        "strip\\('\\*'\\)",
+        "strip\\(\"\\*\"\\)"
+      ],
+      "legal_source": "OWASP Least Privilege Principle 及 SkillHub 平台 MCP 安全规范：MCP 工具应遵循最小权限原则，明确声明所需的具体工具和资源，避免使用通配符声明。",
+      "authority_type": "platform_policy"
+    },
+    {
+      "id": "SEC-008",
+      "name": "未验证输出注入",
+      "category": "OUTPUT",
+      "severity": "medium",
+      "redline": false,
+      "description": "检测到可能将未经验证的内容写入输出文件。包含用户输入或扫描结果的输出可能泄露敏感信息。建议对输出内容进行脱敏和风险过滤。",
+      "behavioral": false,
+      "patterns": [
+        "json\\.dump\\(.*report.*,.*f\\)",
+        "json\\.dumps\\(.*report",
+        "open\\(.*output.*,.*'w'.*\\).*\\n.*\\.write\\(",
+        "\\.write\\(.*context",
+        "\\.write\\(.*content",
+        "os\\.write\\(.*result",
+        "json\\.dump\\(.*data.*,.*f\\)"
+      ],
+      "scan_targets": [
+        "scripts"
+      ],
+      "exclude_patterns": [
+        "#.*output",
+        "被注释",
+        "日志.*输出",
+        "log.*debug",
+        "print.*调试",
+        "debug.*print"
+      ],
+      "legal_source": "SkillHub 平台安全规范 — 输出处理：输出到文件或传递给用户的内容应进行安全审查，避免未验证输出注入导致的信息泄露。OWASP A03:2021 — Injection。",
+      "authority_type": "platform_policy"
+    },
+    {
+      "id": "REG-010",
+      "name": "数据安全法合规",
+      "category": "REGULATORY",
+      "severity": "high",
+      "redline": false,
+      "description": "技能涉及数据处理但未提及《数据安全法》的合规要求。处理数据的技能应声明数据分类分级、数据安全保护义务等基本合规要求。",
+      "behavioral": false,
+      "patterns": [
+        "数据分类",
+        "数据分级",
+        "重要数据",
+        "核心数据",
+        "数据安全保护",
+        "数据安全评估",
+        "数据安全义务",
+        "数据安全负责人"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不涉及.*数据",
+        "不处理.*数据",
+        "本地.*不.*上传",
+        "no.*data.*collect",
+        "process.*locally",
+        "all.*local",
+        "纯本地",
+        "本地运行",
+        "local.*only"
+      ],
+      "legal_source": "《数据安全法》（2021年6月10日公布，2021年9月1日施行）：第三条（数据定义），第二十一条（数据分类分级保护制度），第二十七条（数据安全保护义务），第三十条（重要数据安全负责人）。",
+      "authority_type": "law"
+    },
+    {
+      "id": "REG-011",
+      "name": "关键信息基础设施保护",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能涉及关键信息基础设施（CII）行业（金融、能源、交通等）但未声明相关的安全保护义务。涉及CII行业的技能应关注《关基保护条例》的要求。",
+      "behavioral": false,
+      "patterns": [
+        "关键信息基础设施",
+        "CII",
+        "金融.*基础设施",
+        "能源.*基础设施",
+        "交通.*基础设施",
+        "关键基础设施"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "教育.*目的",
+        "仅供.*参考",
+        "不涉及.*关基",
+        "不涉及.*CII",
+        "for.*educational",
+        "not.*CII"
+      ],
+      "legal_source": "《关键信息基础设施安全保护条例》（2021年7月30日公布，2021年9月1日施行）：第二条（CII定义），第三十一条（运营者安全保护义务），第三十二条（CII风险评估要求）。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "ADV-001",
+      "name": "描述与行为不一致",
+      "category": "ADVISORY",
+      "severity": "low",
+      "redline": false,
+      "description": "技能文档中声明的功能约束（如network: none、dependencies: none、纯本地运行）与脚本代码中发现的模式存在潜在不一致。建议确保文档声明与实际代码行为一致，避免因描述不准确导致用户信任风险。",
+      "behavioral": true,
+      "depends_on": [
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006"
+      ],
+      "look_for": [],
+      "scan_targets": [
+        "all"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "SkillHub 平台安全规范 — 描述与行为一致性：技能的功能描述和安全声明应与实际代码行为保持一致。误导性声明可能构成《消费者权益保护法》下的虚假宣传。",
+      "authority_type": "platform_policy"
+    },
+    {
+      "id": "FIN-006",
+      "name": "金融信息服务合规",
+      "category": "FINANCE",
+      "severity": "high",
+      "redline": false,
+      "description": "检测到技能可能提供金融信息服务但未声明资质要求或风险提示。根据《金融信息服务管理规定》，提供金融信息服务应当取得相应资质，不得传播虚假金融信息，并对所提供信息的真实性、准确性、合法性负责。",
+      "behavioral": false,
+      "patterns": [
+        "金融信息.*服务",
+        "金融信息服务",
+        "提供.*金融信息",
+        "金融资讯",
+        "金融数据.*服务",
+        "金融行情",
+        "实时行情.*提供",
+        "金融信息.*平台"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不构成.*金融信息",
+        "仅供参考",
+        "不提供.*金融信息",
+        "教育.*目的",
+        "for.*educational",
+        "学习参考",
+        "合规检查",
+        "分析工具",
+        "技术分析"
+      ],
+      "legal_source": "《金融信息服务管理规定》（2019年2月1日施行，国家互联网信息办公室发布）第四条：金融信息服务提供者应当履行主体责任，配备与服务规模相适应的管理人员、内容审核人员和技术保障人员。第五条：金融信息服务提供者不得传播含有下列内容的信息：（一）散布虚假金融信息，危害国家金融安全以及社会稳定的；（二）歪曲国家财政货币政策、金融管理政策，扰乱经济秩序、损害国家利益的；（三）教唆他人商业欺诈或经济犯罪，造成社会影响的。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "EXA-004",
+      "name": "广告标识合规",
+      "category": "EXAGGERATION",
+      "severity": "medium",
+      "redline": false,
+      "description": "检测到可能含有广告性质的描述但未进行广告标识。根据《互联网广告管理办法》，互联网广告应当具有可识别性，能够使消费者辨明其为广告。付费推广、推荐、赞助内容应明确标注。",
+      "behavioral": false,
+      "patterns": [
+        "广告.*位",
+        "推广.*合作",
+        "赞助",
+        "推荐产品",
+        "推荐服务",
+        "商业合作",
+        "有偿推荐",
+        "广告投放"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "禁止.*广告",
+        "不含.*广告",
+        "无.*广告",
+        "no.*advert",
+        "advertisement.*disclaimer",
+        "广告法",
+        "遵守.*广告"
+      ],
+      "legal_source": "《互联网广告管理办法》（2023年5月1日施行，国家市场监督管理总局令第72号）第九条：互联网广告应当具有可识别性，能够使消费者辨明其为广告。通过知识介绍、体验分享、消费测评等形式推销商品或者服务，并附加购物链接等购买方式的，广告发布者应当显著标明‘广告’。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "REG-012",
+      "name": "网络数据安全管理合规",
+      "category": "REGULATORY",
+      "severity": "high",
+      "redline": false,
+      "description": "技能涉及网络数据处理但未提及《网络数据安全管理条例》的合规要求。该条例是《数据安全法》和《个人信息保护法》的执行细则，要求网络数据处理者建立健全数据安全管理制度、开展数据安全风险评估、对重要数据和核心数据进行重点保护。",
+      "behavioral": false,
+      "patterns": [
+        "网络数据",
+        "网络数据处理",
+        "网络数据处理者",
+        "数据安全管理",
+        "重要数据目录",
+        "数据安全评估",
+        "数据处理活动"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不涉及.*数据",
+        "不处理.*数据",
+        "纯本地",
+        "本地运行",
+        "local.*only",
+        "no.*data.*process",
+        "all.*local"
+      ],
+      "legal_source": "《网络数据安全管理条例》（国务院令〔2024〕，2025年1月1日施行）：第六条（数据处理者的安全保护义务），第十条（数据安全管理制度），第三十条（重要数据和核心数据的风险评估），第三十八条（网络平台服务提供者的特殊义务）。该条例与《数据安全法》《个人信息保护法》共同构成我国数据治理的「三驾马车」。",
+      "authority_type": "law"
+    },
+    {
+      "id": "REG-013",
+      "name": "电子商务平台合规",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能声称具备交易、平台或电商功能，但未声明《电子商务法》相关合规要求。电子商务经营者应当依法办理市场主体登记、履行纳税义务、保障消费者权益、记录保存交易信息。",
+      "behavioral": false,
+      "patterns": [
+        "电商平台",
+        "电子商务.*平台",
+        "在线交易",
+        "在线支付",
+        "商品交易",
+        "服务交易",
+        "交易平台",
+        "在线商城",
+        "网上商城",
+        "电子合同"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不涉及.*交易",
+        "仅供.*参考",
+        "模拟交易",
+        "模拟.*交易",
+        "demo.*trade",
+        "simulated.*trading",
+        "回测",
+        "模拟盘",
+        "学习.*用途",
+        "教育.*目的"
+      ],
+      "legal_source": "《电子商务法》（2018年8月31日公布，2019年1月1日施行）第十条：电子商务经营者应当依法办理市场主体登记。第十四条：电子商务经营者销售商品或者提供服务应当依法出具纸质发票或者电子发票等购货凭证或者服务单据。第二十七条：电子商务平台经营者应当要求申请进入平台销售商品或者提供服务的经营者提交其身份、地址、联系方式、行政许可等真实信息，进行核验、登记，建立登记档案，并定期核验更新。",
+      "authority_type": "law"
+    },
+    {
+      "id": "REG-014",
+      "name": "网络信息内容生态治理",
+      "category": "REGULATORY",
+      "severity": "high",
+      "redline": false,
+      "description": "技能生成或处理内容信息，但未声明内容安全审核机制。根据《网络信息内容生态治理规定》，网络信息内容生产者不得制作、复制、发布违法信息，应当健全内容审核机制、设置便捷的投诉举报入口。",
+      "behavioral": false,
+      "patterns": [
+        "内容生成",
+        "自动生成.*内容",
+        "AI.*生成.*内容",
+        "智能写作",
+        "内容创作",
+        "文案生成",
+        "文章生成",
+        "内容生产",
+        "批量生成"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "用户.*自行.*负责",
+        "用户.*审核",
+        "用户.*确认",
+        "人工审核",
+        "内容审核",
+        "内容安全",
+        "用户.*自行.*承担",
+        "user.*responsib",
+        "user.*review"
+      ],
+      "legal_source": "《网络信息内容生态治理规定》（2019年12月15日公布，2020年3月1日施行，国家互联网信息办公室令第5号）第九条：网络信息内容服务平台应当建立网络信息内容生态治理机制，制定本平台网络信息内容生态治理细则，健全用户注册、账号管理、信息发布审核、跟帖评论审核、版面页面生态管理、实时巡查、应急处置和网络谣言、黑色产业链信息处置等制度。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "PRI-004",
+      "name": "儿童个人信息保护",
+      "category": "PRIVACY",
+      "severity": "high",
+      "redline": false,
+      "description": "技能可能收集儿童（14周岁以下）个人信息但未声明专门的儿童保护规则。根据《儿童个人信息网络保护规定》，收集14周岁以下未成年人个人信息须征得监护人同意、制定专门的儿童个人信息保护规则、并指定专人负责。",
+      "behavioral": false,
+      "patterns": [
+        "儿童.*信息",
+        "未成年人.*信息",
+        "14周.*以下",
+        "青少年.*信息",
+        "学生.*信息",
+        "面向.*儿童",
+        "面向.*未成年人",
+        "儿童.*用户",
+        "未成年人.*保护"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不涉及.*儿童",
+        "不收集.*儿童",
+        "no.*child",
+        "not.*children",
+        "教育.*目的",
+        "适用于.*成人",
+        "仅.*成人",
+        "adult.*only",
+        "18.*以上"
+      ],
+      "legal_source": "《儿童个人信息网络保护规定》（2019年8月23日公布，2019年10月1日施行，国家互联网信息办公室令第4号）第八条：网络运营者应当设置专门的儿童个人信息保护规则和用户协议，并指定专人负责儿童个人信息保护。第九条：网络运营者收集、使用、转移、披露儿童个人信息的，应当以显著方式、清晰易懂的语言告知儿童监护人，并应当征得儿童监护人的同意。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "PRI-005",
+      "name": "个人信息安全影响评估",
+      "category": "PRIVACY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能涉及敏感个人信息处理或自动化决策但未提及个人信息保护影响评估（PIA）。根据《个人信息保护法》第55条和GB/T 39335-2020，处理敏感个人信息、自动化决策、委托处理、共享转让等场景应开展PIA评估。",
+      "behavioral": false,
+      "patterns": [
+        "影响评估",
+        "保护影响评估",
+        "隐私影响评估",
+        "PIA",
+        "风险评估.*个人",
+        "安全影响.*评估"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不涉及.*评估",
+        "简单.*场景.*不需",
+        "small.*scale",
+        "不处理.*敏感",
+        "本地.*不处理"
+      ],
+      "legal_source": "《个人信息保护法》（2021年11月1日施行）第五十五条：有下列情形之一的，个人信息处理者应当事前进行个人信息保护影响评估：（一）处理敏感个人信息；（二）利用个人信息进行自动化决策；（三）委托处理个人信息、向其他个人信息处理者提供个人信息、公开个人信息；（四）向境外提供个人信息；（五）其他对个人权益有重大影响的个人信息处理活动。GB/T 39335-2020《信息安全技术 个人信息安全影响评估指南》2020年10月1日实施，为PIA的实施提供了方法论框架。",
+      "authority_type": "standard"
+    },
+    {
+      "id": "PRI-006",
+      "name": "违规收集个人信息行为认定",
+      "category": "PRIVACY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能存在可能被认定为违规收集使用个人信息的行为特征。根据《APP违法违规收集使用个人信息行为认定方法》，未公开收集规则、未明示目的和范围、未经同意收集、超范围收集等行为均属于违规。",
+      "behavioral": false,
+      "patterns": [
+        "自动收集",
+        "后台.*收集",
+        "默认.*同意",
+        "捆绑.*同意",
+        "拒绝.*无法使用",
+        "一次性.*同意.*所有",
+        "超范围.*收集",
+        "强制.*授权"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "用户.*选择.*授权",
+        "可按需.*授权",
+        "可单独.*拒绝",
+        "不强制.*授权",
+        "拒绝.*不影响",
+        "用户.*自行.*决定"
+      ],
+      "legal_source": "《APP违法违规收集使用个人信息行为认定方法》（2019年11月28日，国家网信办、工信部、公安部、市场监管总局联合发布）：一、未公开收集使用规则（共5种情形）；二、未明示收集使用个人信息的目的、方式和范围（共3种情形）；三、未经用户同意收集使用个人信息（共6种情形）；四、违反必要原则，收集与其提供的服务无关的个人信息（共6种情形）；五、未经同意向他人提供个人信息（共3种情形）；六、未按法律规定提供删除或更正个人信息功能（共2种情形）；七、侵犯未成年人个人信息权益（共3种情形）。",
+      "authority_type": "regulation"
+    },
+    {
+      "id": "REG-015",
+      "name": "消费者权益保护合规",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能涉及收费、付费或交易功能但未声明消费者权益保护条款。根据《消费者权益保护法》，经营者应当保障消费者的知情权、公平交易权、自主选择权，格式条款不得排除消费者主要权利。",
+      "behavioral": false,
+      "patterns": [
+        "付费.*服务",
+        "收费.*功能",
+        "订阅.*服务",
+        "购买.*会员",
+        "退款.*政策",
+        "费用.*说明",
+        "价格.*说明",
+        "付费.*模式",
+        "按次.*收费",
+        "包月.*服务",
+        "包年.*服务"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "免费",
+        "free",
+        "开源",
+        "open.?source",
+        "MIT.*license",
+        "不收取.*费用",
+        "无.*付费",
+        "不涉及.*收费",
+        "仅供.*学习",
+        "学习.*用途"
+      ],
+      "legal_source": "《消费者权益保护法》（2013年10月25日修订，2014年3月15日施行）第八条：消费者享有知悉其购买、使用的商品或者接受的服务的真实情况的权利。第二十四条：经营者不得以格式条款、通知、声明、店堂告示等方式，作出排除或者限制消费者权利、减轻或者免除经营者责任、加重消费者责任等对消费者不公平、不合理的规定，不得利用格式条款并借助技术手段强制交易。",
+      "authority_type": "law"
+    },
+    {
+      "id": "REG-016",
+      "name": "用户账号信息管理合规",
+      "category": "REGULATORY",
+      "severity": "medium",
+      "redline": false,
+      "description": "技能涉及用户注册、账号管理或身份验证功能但未声明账号信息管理合规要求。根据《互联网用户账号信息管理规定》，互联网信息服务提供者应当核验用户真实身份信息、建立账号信息动态核验制度、并在账号信息中含有违法内容时采取处置措施。",
+      "behavioral": false,
+      "patterns": [
+        "用户注册",
+        "账号.*注册",
+        "用户.*登录",
+        "身份.*验证",
+        "实名.*认证",
+        "手机.*验证码",
+        "邮箱.*验证",
+        "账号.*管理",
+        "注册.*账号",
+        "用户.*身份.*核验"
+      ],
+      "scan_targets": [
+        "docs"
+      ],
+      "exclude_patterns": [
+        "不涉及.*注册",
+        "不收集.*账号",
+        "无需.*注册",
+        "无需.*登录",
+        "no.*registration",
+        "no.*account.*required",
+        "匿名.*使用",
+        "不需要.*注册",
+        "本地.*无.*账号",
+        "本地运行"
+      ],
+      "legal_source": "《互联网用户账号信息管理规定》（2022年6月27日公布，2022年8月1日施行，国家互联网信息办公室令第10号）第六条：互联网信息服务提供者应当依照法律、行政法规和国家有关规定，对申请注册的账号信息进行核验。第十一条：互联网信息服务提供者应当建立账号信息动态核验制度，适时核验存量账号信息。",
+      "authority_type": "regulation"
+    }
+  ],
+  "rule_groups": {
+    "cn_strict": {
+      "description": "国内平台严格模式 — 适用于腾讯SkillHub、百度智能体等国内AI应用市场",
+      "enabled_rules": [
+        "FIN-001",
+        "FIN-002",
+        "FIN-003",
+        "FIN-004",
+        "FIN-005",
+        "DISC-001",
+        "DISC-002",
+        "DISC-003",
+        "EXA-001",
+        "EXA-002",
+        "EXA-003",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "REC-001",
+        "REC-002",
+        "REC-003",
+        "REC-004",
+        "PRI-001",
+        "PRI-002",
+        "PRI-003",
+        "REG-001",
+        "REG-002",
+        "REG-003",
+        "REG-004",
+        "REG-005",
+        "REG-006",
+        "REG-007",
+        "REG-008",
+        "REG-009",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "REG-010",
+        "REG-011",
+        "ADV-001",
+        "FIN-006",
+        "EXA-004",
+        "REG-012",
+        "REG-013",
+        "REG-014",
+        "PRI-004",
+        "PRI-005",
+        "PRI-006",
+        "REG-015",
+        "REG-016"
+      ]
+    },
+    "cn_standard": {
+      "description": "国内平台标准模式 — 适用于国内一般社区发布",
+      "enabled_rules": [
+        "FIN-001",
+        "FIN-002",
+        "FIN-003",
+        "FIN-004",
+        "FIN-005",
+        "DISC-001",
+        "DISC-002",
+        "DISC-003",
+        "EXA-001",
+        "EXA-002",
+        "EXA-003",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "REC-001",
+        "REC-002",
+        "REC-003",
+        "REC-004",
+        "PRI-001",
+        "PRI-002",
+        "PRI-003",
+        "REG-001",
+        "REG-002",
+        "REG-003",
+        "REG-004",
+        "REG-005",
+        "REG-006",
+        "REG-007",
+        "REG-008",
+        "REG-009",
+        "SEC-005",
+        "SEC-008",
+        "REG-010",
+        "REG-011",
+        "SEC-006",
+        "SEC-007",
+        "ADV-001",
+        "FIN-006",
+        "EXA-004",
+        "REG-012",
+        "REG-013",
+        "REG-014",
+        "PRI-004",
+        "PRI-005",
+        "PRI-006",
+        "REG-015",
+        "REG-016"
+      ]
+    }
+  },
+  "sources": {
+    "note": "每条规则的 legal_source 引用自以下法律法规数据库，建议定期交叉核对",
+    "database": "国家法律法规数据库 (flk.npc.gov.cn)，引用日期 2026-07-19",
+    "references": {
+      "PIPL": "《个人信息保护法》2021年8月20日公布，2021年11月1日施行",
+      "DataExport": "《数据出境安全评估办法》2022年7月7日公布，2022年9月1日施行",
+      "AIGC": "《生成式人工智能服务管理暂行办法》2023年7月10日公布，2023年8月15日施行",
+      "Algorithm": "《互联网信息服务算法推荐管理规定》2022年1月4日公布，2022年3月1日施行",
+      "ICP": "《互联网信息服务管理办法》国务院令第292号，2000年公布，2011年修订",
+      "SecuritiesLaw": "《证券法》2019年12月28日修订，2020年3月1日施行",
+      "AdvertisingLaw": "《广告法》2015年4月24日修订，2021年修正",
+      "AntiUnfair": "《反不正当竞争法》2017年11月4日修订，2019年4月23日修正",
+      "MinorProtection": "《未成年人网络保护条例》2024年1月1日施行",
+      "Cybersecurity": "《网络安全法》2016年11月7日公布，2017年6月1日施行",
+      "Medical": "《医疗机构管理条例》2022年修订；《互联网诊疗管理办法（试行）》2018年",
+      "DoubleReduction": "《双减意见》2021年7月24日，中共中央办公厅、国务院办公厅印发",
+      "CryptoBan": "《关于防范代币发行融资风险的公告》2017年9月4日，七部委联合发布",
+      "SecuritiesConsult": "《证券、期货投资咨询管理暂行办法》1998年4月1日施行",
+      "LawyerLaw": "《律师法》2017年修订",
+      "CivilCode": "《民法典》2021年1月1日施行",
+      "GB35273": "GB/T 35273-2020《个人信息安全规范》2020年10月1日实施",
+      "SkillHub": "SkillHub 平台安全规范及最佳实践",
+      "DataSecurityLaw": "《数据安全法》2021年6月10日公布，2021年9月1日施行",
+      "CIIProtection": "《关键信息基础设施安全保护条例》2021年7月30日公布，2021年9月1日施行",
+      "OWASP": "OWASP Top 10 2021 — A03:2021 Injection; A08:2021 Software and Data Integrity Failures",
+      "NIST_SP_800_161": "NIST SP 800-161 Rev.1 — Cybersecurity Supply Chain Risk Management Practices",
+      "NetworkDataRegulation": "《网络数据安全管理条例》国务院令〔2024〕，2025年1月1日施行",
+      "FinancialInfoService": "《金融信息服务管理规定》2019年2月1日施行，国家网信办发布",
+      "ECommerceLaw": "《电子商务法》2018年8月31日公布，2019年1月1日施行",
+      "ContentGovernance": "《网络信息内容生态治理规定》2020年3月1日施行，国家网信办令第5号",
+      "AdManagement": "《互联网广告管理办法》2023年5月1日施行，国家市场监督管理总局令第72号",
+      "ChildrenPrivacy": "《儿童个人信息网络保护规定》2019年10月1日施行，国家网信办令第4号",
+      "PIA_GB": "GB/T 39335-2020《个人信息安全影响评估指南》2020年10月1日实施",
+      "APPCompliance": "《APP违法违规收集使用个人信息行为认定方法》2019年11月28日，四部委联合发布",
+      "ConsumerRights": "《消费者权益保护法》2014年3月15日施行",
+      "AccountInfo": "《互联网用户账号信息管理规定》2022年8月1日施行，国家网信办令第10号"
+    }
+  }
+}
