@@ -1366,7 +1366,17 @@
         "return\\s+\"\\*\"",
         "color\\s*=",
         "strip\\('\\*'\\)",
-        "strip\\(\"\\*\"\\)"
+        "strip\\(\"\\*\"\\)",
+        "\\\"\\*\\\"\\s*\\*\\s*\\(",
+        "'\\*'\\s*\\*\\s*\\(",
+        "掩码",
+        "脱敏",
+        "星号.*(掩码|脱敏)",
+        "\\*\\s*\\(len\\(",
+        "permissions.*\\*\\*",
+        "with .*permissions",
+        "permission.*— \\*\\*",
+        "`0600` permissions"
       ],
       "legal_source": "OWASP Least Privilege Principle 及 SkillHub 平台 MCP 安全规范：MCP 工具应遵循最小权限原则，明确声明所需的具体工具和资源，避免使用通配符声明。",
       "authority_type": "platform_policy"
@@ -1965,6 +1975,21 @@
       ],
       "exclude_patterns": [],
       "legal_source": "DISCLOSURE v0.2 network 字段；披露端点应与代码一致"
+    },
+    {
+      "id": "DISCL-007",
+      "name": "付费技能缺支付披露",
+      "category": "DISCLOSURE",
+      "severity": "medium",
+      "redline": false,
+      "description": "disclosure.pay=true 但 SKILL.md 未说明支付方式（支付通道端点/微信支付/薄客户端模式等）。付费技能应披露：支付方式、通道端点、解锁机制与退款边界。",
+      "behavioral": true,
+      "patterns": [],
+      "scan_targets": [
+        "SKILL.md"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "DISCLOSURE v0.3 pay 维度；付费技能披露规范（2026-08-16 讨论）"
     }
   ],
   "rule_groups": {
@@ -1982,6 +2007,7 @@
         "DISCL-004",
         "DISCL-005",
         "DISCL-006",
+        "DISCL-007",
         "EXA-001",
         "EXA-002",
         "EXA-003",
@@ -2042,6 +2068,7 @@
         "DISCL-004",
         "DISCL-005",
         "DISCL-006",
+        "DISCL-007",
         "EXA-001",
         "EXA-002",
         "EXA-003",

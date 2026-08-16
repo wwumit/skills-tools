@@ -1,4 +1,10 @@
 # Changelog
+## 1.4.5 (2026-08-16)
+
+- **DISCLOSURE v0.3 pay 维度**：disclosure 增加 pay（付费技能，与 cloud 正交）；DISCL-007 付费技能需披露支付方式；summary 输出 pay 字段
+- **SEC-007 误报修复**：脱敏掩码（`"*" * (len..)`）与 markdown 粗体（`permissions **...`）不再被当作权限通配符
+- 24 精选技能（含 domestic/xborder 登记层）红线全部清零
+
 ## 1.4.4 (2026-08-16)
 
 - **DISCLOSURE 检查改进**：

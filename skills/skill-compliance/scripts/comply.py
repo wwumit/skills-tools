@@ -702,6 +702,25 @@ class ComplianceChecker:
                     authority_type="platform_policy",
                 )
 
+        # pay 维度（v0.3）：付费技能独立标记，与 cloud 正交
+        pay = self._disc_value(disc_block, "pay") == "true"
+        if pay:
+            pay_disc = self._text("SKILL.md") + self._text("README.md")
+            has_pay_method = any(
+                re.search(p, pay_disc, re.I)
+                for p in [r"微信支付", r"wechat|weixin.?pay", r"支付通道", r"付费解锁",
+                          r"payment", r"薄客户端", r"X402"]
+            )
+            if not has_pay_method:
+                self._add(
+                    category="DISCLOSURE", severity="medium",
+                    file="SKILL.md", line=0,
+                    found="disclosure.pay=true 但未披露支付方式（DISCL-007）",
+                    recommendation=self._rule_rec("DISCL-007"),
+                    legal_source="DISCLOSURE v0.3 pay 维度",
+                    authority_type="platform_policy",
+                )
+
         # 产出披露摘要（camelCase，对齐开放数据层）
         self.disclosure_summary = {
             "cloud": cloud,
@@ -714,6 +733,7 @@ class ComplianceChecker:
             "jurisdiction": self._disc_list(disc_block, "jurisdiction"),
             "retention": (self._disc_value(disc_block, "retention") or "none").strip("\"'"),
             "permissionsDeclared": has_permissions,
+            "pay": pay,
         }
 
     # ── 检查 5e：宿主依赖声明（DEPENDENCY，@yzke 遮蔽案例）─────
