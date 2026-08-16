@@ -1,13 +1,16 @@
 ---
 name: skill-compliance
-version: 1.3.1
+version: 1.4.0
 model: default
-description: Skill上架合规检查器（面向国内平台）。在上传前检查skill是否符合国内监管要求，包括金融敏感词、免责声明、安全红线等。
+description: Skill上架合规检查器（国内平台 + 发布披露）。检查金融敏感词、免责声明、安全红线，并按 DISCLOSURE v0.2 检查发布披露完整性（D1/D3/D4 必填）与声明-代码一致性（云端/离线/端点 mismatch）、DSH 宿主依赖遮蔽风险；输出 disclosure 摘要（开放数据层字段）。
 use_when:
   - 准备将skill发布到国内平台（如SkillHub、飞书、钉钉等）前做合规预检
   - 检查skill文档中是否有违反广告法或金融监管的用语
   - 快速扫描脚本中是否有安全红线（subprocess/exec/eval）
   - 批量检查多个skill的合规状况
+  - 检查skill是否披露云端依赖/凭据处理/权限声明（DISCLOSURE v0.2）
+  - 检查声明与代码一致性（声称离线但代码有网络调用）
+  - 检查 DSH 宿主包是否误入普通 dependencies（遮蔽宿主风险）
 trigger_keywords:
   - skillhub合规
   - 上架检查

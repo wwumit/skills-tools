@@ -1,4 +1,17 @@
 # Changelog
+## 1.4.0 (2026-08-16)
+
+- **新增 DISCLOSURE 检查（发布披露，v0.2 三方对齐）**：按 DISCLOSURE v0.2 字段契约检查发布披露
+  - DISCL-001 无 disclosure 声明（代码有网络调用时升级为 high）
+  - DISCL-002 disclosure.cloud 缺失（D1 必填）
+  - DISCL-003 cloud=true 但 api_keys 为空（D3 必填）
+  - DISCL-004 无 permissions 声明（D4 必填）
+  - DISCL-005 声明 cloud:false 但代码含网络调用（声明-实现不一致 mismatch）
+  - DISCL-006 代码访问端点与声明 network 不一致
+- **新增 DEPENDENCY 检查（宿主依赖声明）**：DEP-001 @deepseek-ai/* 宿主接口包进普通 dependencies（遮蔽宿主风险，@yzke 案例）
+- **输出 disclosure 摘要**：JSON 报告新增 `disclosure` 字段（camelCase，对齐开放数据层 verified.json/catalog.json 消费形态）
+- 规则从 48 条扩展到 55 条，新增 DISCLOSURE / DEPENDENCY 两个类别
+
 ## 1.3.1 (2026-07-20)
 
 - **法规体系持续扩展**：新增 5 条规则，从 43 条扩展到 48 条，参考来源从 27 个增加到 32 个

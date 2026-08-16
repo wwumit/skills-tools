@@ -60,6 +60,8 @@ class ComplianceChecker:
         self.needs_fix_threshold = self._extract_score(
             thresholds.get("NEEDS_FIX", "score >= 40")
         )
+        # 披露摘要（DISCLOSURE v0.2 开放数据层产出形态）
+        self.disclosure_summary = None
 
     @staticmethod
     def _extract_score(threshold_str: str) -> int:
@@ -508,6 +510,227 @@ class ComplianceChecker:
                 authority_type=h.get("authority_type", "platform_policy"),
             )
 
+    # ── 检查 5d：发布披露（DISCLOSURE v0.2）───────────────────
+
+    _NETWORK_CALL_PATTERNS = [
+        re.compile(r"requests\.(get|post|put|delete|patch|head)\s*\(", re.I),
+        re.compile(r"urllib\.(request|parse)\.[a-z_]+", re.I),
+        re.compile(r"httpx\.(get|post|put|delete|patch|head)\s*\(", re.I),
+        re.compile(r"aiohttp\.(ClientSession|request)\s*\(", re.I),
+        re.compile(r"socket\.socket\s*\(", re.I),
+    ]
+    _DOMAIN_PATTERN = re.compile(r"https?://([a-zA-Z0-9.-]+)")
+
+    def _frontmatter(self) -> tuple[str, str]:
+        """提取 SKILL.md frontmatter 原文（disclosure 块 + permissions 块）。"""
+        lines = self._read("SKILL.md")
+        if not lines or not lines[0].strip().startswith("---"):
+            return "", ""
+        end = None
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                end = i
+                break
+        if end is None:
+            return "", ""
+        fm = "".join(lines[1:end])
+        return self._extract_block(fm, "disclosure"), self._extract_block(fm, "permissions")
+
+    @staticmethod
+    def _extract_block(fm: str, key: str) -> str:
+        """按顶层键提取 frontmatter 块（缩进 2 空格的子行）。"""
+        lines = fm.split("\n")
+        start = None
+        for i, l in enumerate(lines):
+            if re.match(rf"^{key}:\s*$", l):
+                start = i
+                break
+        if start is None:
+            return ""
+        block = []
+        for l in lines[start + 1:]:
+            if l and not l.startswith(" ") and not l.startswith("\t"):
+                break
+            block.append(l)
+        return "\n".join(block)
+
+    @staticmethod
+    def _disc_value(block: str, key: str) -> typing.Optional[str]:
+        m = re.search(rf"^\s{{2}}{key}:\s*(.*)$", block, re.M)
+        return m.group(1).strip() if m else None
+
+    @staticmethod
+    def _disc_list(block: str, key: str) -> list[str]:
+        raw = ComplianceChecker._disc_value(block, key)
+        if not raw:
+            return []
+        try:
+            v = json.loads(raw)
+            return v if isinstance(v, list) else []
+        except (json.JSONDecodeError, TypeError):
+            return [raw.strip("\"'")] if raw != "[]" else []
+
+    def _api_keys_count(self, block: str) -> int:
+        return len(re.findall(r"^\s{4}-\s*env:", block, re.M))
+
+    def _code_network_domains(self) -> list[str]:
+        """扫描 scripts/ 代码中的网络端点域名（去重）。"""
+        domains: set[str] = set()
+        script_dir = os.path.join(self.target_dir, "scripts")
+        if not os.path.isdir(script_dir):
+            return []
+        for f in sorted(os.listdir(script_dir)):
+            if not f.endswith((".py", ".sh", ".mjs", ".js")):
+                continue
+            for line in self._read("scripts", f):
+                for m in self._DOMAIN_PATTERN.finditer(line):
+                    domains.add(m.group(1).lower())
+        return sorted(domains)
+
+    def _code_has_network_calls(self) -> bool:
+        script_dir = os.path.join(self.target_dir, "scripts")
+        if not os.path.isdir(script_dir):
+            return False
+        for f in sorted(os.listdir(script_dir)):
+            if not f.endswith((".py", ".sh", ".mjs", ".js")):
+                continue
+            for line in self._read("scripts", f):
+                if any(p.search(line) for p in self._NETWORK_CALL_PATTERNS):
+                    return True
+        return False
+
+    def check_disclosure(self):
+        """DISCLOSURE v0.2 检查：D1/D3/D4 必填完整性 + 声明与代码一致性。
+
+        产出 self.disclosure_summary（camelCase 形态，对齐开放数据层字段）。
+        """
+        disc_block, perm_block = self._frontmatter()
+        has_disclosure = bool(disc_block.strip())
+        has_permissions = bool(perm_block.strip())
+
+        if not has_disclosure:
+            sev = "high" if self._code_has_network_calls() else "medium"
+            self._add(
+                category="DISCLOSURE", severity=sev,
+                file="SKILL.md", line=0,
+                found="frontmatter 无 disclosure 块",
+                recommendation=self._rule_rec("DISCL-001"),
+                legal_source="DISCLOSURE v0.2 D1/D3/D4 必填；市场 STANDARD.md §9",
+                authority_type="platform_policy",
+            )
+            return
+
+        # 完整性：D1 cloud（必填）
+        cloud_raw = self._disc_value(disc_block, "cloud")
+        if cloud_raw is None:
+            self._add(
+                category="DISCLOSURE", severity="medium",
+                file="SKILL.md", line=0,
+                found="disclosure 缺 cloud 字段（D1 必填）",
+                recommendation=self._rule_rec("DISCL-002"),
+                legal_source="DISCLOSURE v0.2 D1（cloud）必填",
+                authority_type="platform_policy",
+            )
+        cloud = cloud_raw == "true"
+
+        # 完整性：D4 permissions（必填）
+        if not has_permissions:
+            self._add(
+                category="DISCLOSURE", severity="medium",
+                file="SKILL.md", line=0,
+                found="frontmatter 无 permissions 块（D4 必填）",
+                recommendation=self._rule_rec("DISCL-004"),
+                legal_source="DISCLOSURE v0.2 D4（permissions）必填",
+                authority_type="platform_policy",
+            )
+
+        # 完整性：D3 api_keys（cloud=true 时必填）
+        if cloud and self._api_keys_count(disc_block) == 0:
+            self._add(
+                category="DISCLOSURE", severity="high",
+                file="SKILL.md", line=0,
+                found="disclosure.cloud=true 但 api_keys 为空（D3 必填）",
+                recommendation=self._rule_rec("DISCL-003"),
+                legal_source="DISCLOSURE v0.2 D3（api_keys）必填",
+                authority_type="platform_policy",
+            )
+
+        # 一致性：声明离线但代码有网络调用（mismatch）
+        if cloud is False and self._code_has_network_calls():
+            self._add(
+                category="DISCLOSURE", severity="high",
+                file="scripts/", line=0,
+                found="disclosure.cloud=false 但代码含网络调用（声明与实现不一致）",
+                recommendation=self._rule_rec("DISCL-005"),
+                legal_source="DISCLOSURE v0.2 声明与代码一致性",
+                authority_type="platform_policy",
+            )
+
+        # 一致性：端点对比（cloud=true 时）
+        if cloud:
+            declared = set()
+            for u in self._disc_list(disc_block, "network"):
+                m = self._DOMAIN_PATTERN.search(u)
+                declared.add(m.group(1).lower() if m else u.lower())
+            actual = set(self._code_network_domains())
+            undeclared = actual - declared
+            if actual and undeclared:
+                self._add(
+                    category="DISCLOSURE", severity="medium",
+                    file="scripts/", line=0,
+                    found="代码访问未声明端点: " + ", ".join(sorted(undeclared)[:4]),
+                    recommendation=self._rule_rec("DISCL-006"),
+                    legal_source="DISCLOSURE v0.2 network 字段",
+                    authority_type="platform_policy",
+                )
+
+        # 产出披露摘要（camelCase，对齐开放数据层）
+        self.disclosure_summary = {
+            "cloud": cloud,
+            "network": self._disc_list(disc_block, "network"),
+            "offlineMode": self._disc_value(disc_block, "offline_mode") == "true",
+            "apiKeys": [
+                {"env": e}
+                for e in re.findall(r"^\s{4}-\s*env:\s*[\"']?([^\"'\s]+)", disc_block, re.M)
+            ],
+            "jurisdiction": self._disc_list(disc_block, "jurisdiction"),
+            "retention": (self._disc_value(disc_block, "retention") or "none").strip("\"'"),
+            "permissionsDeclared": has_permissions,
+        }
+
+    # ── 检查 5e：宿主依赖声明（DEPENDENCY，@yzke 遮蔽案例）─────
+
+    def check_dependency(self):
+        """package.json 中 @deepseek-ai/* 宿主包不得进普通 dependencies。"""
+        pkg_lines = self._read("package.json")
+        if not pkg_lines:
+            return
+        try:
+            pkg = json.loads("".join(pkg_lines))
+        except (json.JSONDecodeError, OSError):
+            return
+        deps = {}
+        for key in ("dependencies", "bundledDependencies"):
+            v = pkg.get(key)
+            if isinstance(v, dict):
+                deps.update(v)
+            elif isinstance(v, list):
+                deps.update({d: "" for d in v})
+        host_pkgs = sorted(k for k in deps if k.startswith("@deepseek-ai/"))
+        if host_pkgs:
+            self._add(
+                category="DEPENDENCY", severity="high",
+                file="package.json", line=0,
+                found="DSH 宿主包在普通 dependencies: " + ", ".join(host_pkgs),
+                recommendation=self._rule_rec("DEP-001"),
+                legal_source="STANDARD.md §2.1 硬规则 + §6.6 反模式（#2269 @yzke 遮蔽案例）",
+                authority_type="platform_policy",
+            )
+
+    def _rule_rec(self, rule_id: str) -> str:
+        r = self.rule_map.get(rule_id)
+        return r.get("description", "") if r else rule_id
+
     # ── 检查 5d：描述-行为不一致 ────────────────────────────
 
 
@@ -699,6 +922,8 @@ class ComplianceChecker:
         self.check_output()
         self.check_description_mismatch()
         self.check_recommendations()
+        self.check_disclosure()
+        self.check_dependency()
         self.run_plugins()
 
     # ── 检查 6：Domain Plugins ────────────────────────────────
@@ -860,6 +1085,7 @@ class ComplianceChecker:
                 "compliance": sc.get("compliance", {}),
                 "advisory": sc.get("advisory", {}),
                 "issues": self.issues,
+                "disclosure": self.disclosure_summary,
                 "authority_types": {
                     "law": "法律（全国人大及其常委会通过）",
                     "regulation": "行政法规/管理办法/部门规章",
