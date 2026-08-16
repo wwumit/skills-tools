@@ -21,6 +21,19 @@ environment: local
 network: none
 dependencies: none (Python stdlib only)
 disclaimer: 本工具仅为辅助检查参考，不构成合规保证。最终合规责任由skill开发者自行承担。
+disclosure:
+  cloud: false
+  network: []
+  offline_mode: true
+  api_keys: []
+  jurisdiction: []
+  retention: "none"
+permissions:
+  network: []
+  filesystem:
+    write: []
+  env: []
+
 ---
 
 # Skill Compliance Check

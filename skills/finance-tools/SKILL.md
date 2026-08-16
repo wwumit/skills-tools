@@ -22,6 +22,19 @@ description: |
   适用范围：CSV 格式的财务/交易数据
   运行模式：纯本地，无网络请求 ❎
   外部依赖：Python标准库（无需额外安装）
+disclosure:
+  cloud: false
+  network: []
+  offline_mode: true
+  api_keys: []
+  jurisdiction: []
+  retention: "none"
+permissions:
+  network: []
+  filesystem:
+    write: []
+  env: []
+
 ---
 
 # 💰 Finance Tools v1.1.0

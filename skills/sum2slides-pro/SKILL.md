@@ -4,6 +4,19 @@ description: |
   将多说话人对话/群聊记录一键转化为结构化 PPT（meeting/brainstorm/retro 模板），纯本地生成 PPTX。
   Use when: 用户需要把群聊、会议记录、AI 对话总结成 PPT 演示文稿。
   触发词：sum2slides, 对话转PPT, 群聊生成PPT, 会议纪要转PPT, pptx, auto-pipeline
+disclosure:
+  cloud: false
+  network: []
+  offline_mode: true
+  api_keys: []
+  jurisdiction: []
+  retention: "none"
+permissions:
+  network: []
+  filesystem:
+    write: []
+  env: []
+
 ---
 
 # Sum2Slides Pro — 群聊/对话一键生成PPT

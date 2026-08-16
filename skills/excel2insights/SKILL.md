@@ -5,6 +5,19 @@ description: |
   可视化生成与结构化报告；支持 Quick Scan 与 Deep Analysis 两种模式，纯本地运行。
   Use when: 用户需要分析表格数据、生成数据报告、检查数据质量、可视化探索数据集。
   触发词：excel, csv, xlsx, 数据分析, 数据质量, 可视化, report
+disclosure:
+  cloud: false
+  network: []
+  offline_mode: true
+  api_keys: []
+  jurisdiction: []
+  retention: "none"
+permissions:
+  network: []
+  filesystem:
+    write: []
+  env: []
+
 ---
 
 # Excel2Insights

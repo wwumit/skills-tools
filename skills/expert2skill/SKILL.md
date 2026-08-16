@@ -19,6 +19,19 @@ description: |
   locale: zh-CN
 
 agent_created: true
+disclosure:
+  cloud: false
+  network: []
+  offline_mode: true
+  api_keys: []
+  jurisdiction: []
+  retention: "none"
+permissions:
+  network: []
+  filesystem:
+    write: []
+  env: []
+
 ---
 
 # 专家方法沉淀器（expert2skill）
