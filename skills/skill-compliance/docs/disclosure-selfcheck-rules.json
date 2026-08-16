@@ -1,0 +1,79 @@
+{
+  "schema": "disclosure-selfcheck-rules/v1",
+  "standard_ref": "STANDARD.md §9 — 发布披露清单（DISCLOSURE v0.2 字段契约）",
+  "checker_ref": "skill-compliance v1.4.0（scripts/comply.py check）— 全自动执行本规则集",
+  "declaration_form": "SKILL.md frontmatter（snake_case 声明形态，构建期归一化 camelCase）",
+  "rules": [
+    {
+      "id": "DEP-001",
+      "name": "DSH 宿主包进入普通 dependencies",
+      "category": "DEPENDENCY",
+      "severity": "high",
+      "mandatory": true,
+      "check_command": "node -e \"const p=require('./package.json');const d={...p.dependencies,...p.bundledDependencies};console.log(Object.keys(d||{}).filter(k=>k.startsWith('@deepseek-ai/')))\"",
+      "description": "package.json 把 @deepseek-ai/dsh-* 宿主接口包声明为普通 dependencies/bundledDependencies。安装后旧版副本可能遮蔽宿主，导致工具调用失败与内置预设失效（dsh-excel-chat 案例）。应放 peerDependencies，构建期版本放 devDependencies。",
+      "legal_source": "STANDARD.md §2.1 硬规则 + §6.6 反模式（#2269 @yzke 遮蔽案例）"
+    },
+    {
+      "id": "DISCL-001",
+      "name": "缺少 disclosure 声明",
+      "category": "DISCLOSURE",
+      "severity": "high",
+      "mandatory": true,
+      "check_command": "grep -c \"^disclosure:\" SKILL.md || echo \"missing\"",
+      "description": "SKILL.md frontmatter 未声明 disclosure 块。DISCLOSURE v0.2 契约 D1/D3/D4 必填：云端依赖、凭据处理、权限声明必须在发布时披露；市场卡片三态中的「未声明」依赖此字段。",
+      "legal_source": "DISCLOSURE v0.2（#2269 三方对齐）D1/D3/D4 必填；市场 STANDARD.md §9 字段契约"
+    },
+    {
+      "id": "DISCL-002",
+      "name": "disclosure.cloud 缺失",
+      "category": "DISCLOSURE",
+      "severity": "medium",
+      "mandatory": false,
+      "check_command": "grep -A6 \"^disclosure:\" SKILL.md | grep \"cloud:\"",
+      "description": "disclosure 块存在但缺 cloud 字段（D1 必填：是否发数据到云端）。",
+      "legal_source": "DISCLOSURE v0.2 D1（cloud）必填"
+    },
+    {
+      "id": "DISCL-003",
+      "name": "云端技能缺凭据披露",
+      "category": "DISCLOSURE",
+      "severity": "high",
+      "mandatory": true,
+      "check_command": "grep -A12 \"^disclosure:\" SKILL.md | grep -A1 \"api_keys:\" | grep \"env:\"",
+      "description": "disclosure.cloud=true 但 api_keys 为空（D3 必填：凭据获取/存储/权限/是否落日志）。",
+      "legal_source": "DISCLOSURE v0.2 D3（api_keys）必填"
+    },
+    {
+      "id": "DISCL-004",
+      "name": "缺少 permissions 声明",
+      "category": "DISCLOSURE",
+      "severity": "medium",
+      "mandatory": true,
+      "check_command": "grep -c \"^permissions:\" SKILL.md",
+      "description": "SKILL.md frontmatter 无 permissions 块（D4 必填：网络/文件系统/环境变量读写范围）。",
+      "legal_source": "DISCLOSURE v0.2 D4（permissions）必填；DSH permissions 声明机制"
+    },
+    {
+      "id": "DISCL-005",
+      "name": "声明离线但代码有网络调用",
+      "category": "DISCLOSURE",
+      "severity": "high",
+      "mandatory": false,
+      "check_command": "grep -rE \"requests\\.(get|post|put)|urllib|httpx|aiohttp|https?://\" scripts/ 2>/dev/null | head",
+      "description": "disclosure.cloud=false 但代码含网络调用（requests/urllib/httpx/https:// 等）。声明与实现不一致（mismatch），市场三态应标「披露不完整」或「未声明数据行为」。",
+      "legal_source": "DISCLOSURE v0.2 声明与代码一致性；市场卡片三态 ⚠️/❓ 判定依据"
+    },
+    {
+      "id": "DISCL-006",
+      "name": "网络端点与声明不一致",
+      "category": "DISCLOSURE",
+      "severity": "medium",
+      "mandatory": false,
+      "check_command": "grep -rhoE \"https?://[a-zA-Z0-9.-]+\" scripts/ 2>/dev/null | sort -u",
+      "description": "disclosure.network 声明的端点与代码中实际端点不一致（如声明 compliancehub.cn 但代码请求其他域）。",
+      "legal_source": "DISCLOSURE v0.2 network 字段；披露端点应与代码一致"
+    }
+  ],
+  "mandatory_summary": "D1 cloud（DISCL-001/002）+ D3 api_keys（DISCL-003）+ D4 permissions（DISCL-004）必填；DEP-001 宿主依赖硬规则；DISCL-005/006 声明-代码一致性"
+}

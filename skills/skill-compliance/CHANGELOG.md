@@ -11,6 +11,7 @@
 - **新增 DEPENDENCY 检查（宿主依赖声明）**：DEP-001 @deepseek-ai/* 宿主接口包进普通 dependencies（遮蔽宿主风险，@yzke 案例）
 - **输出 disclosure 摘要**：JSON 报告新增 `disclosure` 字段（camelCase，对齐开放数据层 verified.json/catalog.json 消费形态）
 - 规则从 48 条扩展到 55 条，新增 DISCLOSURE / DEPENDENCY 两个类别
+- **发布披露自测规则集**：docs/disclosure-selfcheck-rules.json（机器可读，schema v1）+ docs/disclosure-selfcheck.md（STANDARD §7 命令块）
 
 ## 1.3.1 (2026-07-20)
 
