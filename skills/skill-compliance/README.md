@@ -10,7 +10,7 @@ SkillHub 面向国内用户，上架 skill 需要满足《广告法》《证券�
 
 - **金融类 skill**：不能荐股、不能承诺收益、不能无资质给出投资建议
 - **合规类 skill**：不能代替律师给出法律意见
-- **所有 skill**：不能使用极限词（"最好"、"第一"）、不能使用 subprocess/exec/eval
+- **所有 skill**：不能使用绝对化用语（广告法禁止的夸大表述）、不能使用 subprocess/exec/eval
 - **必须声明**：在显眼位置添加免责声明
 
 这些规则经常变化且容易被忽略。本工具帮你一次性扫描所有常见问题。
@@ -80,7 +80,7 @@ python3 scripts/comply.py summary --dir ../
 |------|---------|----------|
 | FINANCE | 荐股推荐、目标价、保证收益、需资质的金融用语 | high / medium / low |
 | DISCLAIMER | 投资、法律免责声明是否存在及位置 | high / medium |
-| EXAGGERATION | 极限词（最好、第一）、夸大描述、对比表述 | medium |
+| EXAGGERATION | 绝对化用语、夸大描述、对比表述 | medium |
 | SECURITY | subprocess/exec/eval/JSON 合法性/版本号格式 | critical / high / medium |
 | RECOMMENDATIONS | 综合改进建议 | high / medium / low |
 
