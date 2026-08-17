@@ -639,7 +639,14 @@
         "'subprocess\\.Popen\\.\\*curl'",
         "subprocess\\.run\\($",
         "result = subprocess\\.run\\(",
-        "'subprocess\\.Popen\\.\\*wget'"
+        "'subprocess\\.Popen\\.\\*wget'",
+        "MAL-\\d+",
+        "eval\\s*\\(open\\(\\)\\.read\\(\\)\\)",
+        "规则.*(eval|exec|subprocess)",
+        "(eval|exec|subprocess).*(检测|规则|示例)",
+        "远程代码执行",
+        "MAL-\\d+.*(eval|exec)",
+        "危险调用"
       ],
       "legal_source": "SkillHub 平台安全规范第3条：禁止使用可能执行任意代码的系统调用",
       "authority_type": "platform_policy"
@@ -1300,7 +1307,12 @@
         "#.*curl",
         "#.*wget",
         "不应.*使用",
-        "不建议"
+        "不建议",
+        "MAL-\\d+",
+        "规则.*(curl|wget|eval)",
+        "curl\\|sh.*(检测|规则)",
+        "wget.*sh.*(检测|规则)",
+        "远程代码执行"
       ],
       "legal_source": "SkillHub 平台安全规范 — 供应链安全：应避免运行时从外部获取并执行未经审计的代码。NIST SP 800-161 供应链风险管理实践。",
       "authority_type": "platform_policy"
@@ -1382,7 +1394,10 @@
         "\"\\*\", \"x\"",
         "\"\\^\"",
         "版本范围符",
-        "范围符"
+        "范围符",
+        "rglob\\(\\\"\\*\\\"\\)",
+        "rglob\\('\\*'\\)",
+        "目录遍历"
       ],
       "legal_source": "OWASP Least Privilege Principle 及 SkillHub 平台 MCP 安全规范：MCP 工具应遵循最小权限原则，明确声明所需的具体工具和资源，避免使用通配符声明。",
       "authority_type": "platform_policy"

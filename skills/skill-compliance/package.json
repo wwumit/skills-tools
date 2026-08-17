@@ -1,6 +1,6 @@
 {
   "name": "skill-compliance",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "SkillHub上架合规检查器 — 上传前检查skill是否符合国内监管要求，包括金融敏感词、免责声明、安全红线等",
   "author": "ChengQian (成乾)",
   "keywords": [
