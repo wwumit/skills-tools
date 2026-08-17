@@ -1,6 +1,6 @@
 ---
 name: bundle-lint
-version: 1.1.0
+version: 1.2.0
 description: |
   DSH 插件 bundle 结构一致性校验器。校验 cordis.patch.yml、package.json 的 dsh 插件配置、
   files 清单、入口文件与 bundle id/name 一致性——发布前自检，避免被市场/目录收录时打回。

@@ -112,9 +112,15 @@ def check(target: str) -> dict:
             add("BND-002", "medium", f"dsh.kind 缺失或非常见值: {kind!r}",
                 "声明 kind（server/client/mixed），帮助运行时机判定")
         bundle = dsh.get("bundle", {})
-        if not bundle.get("patch"):
+        patch_path = bundle.get("patch")
+        if not patch_path:
             add("BND-002", "medium", "dsh.bundle.patch 缺失",
                 "声明 bundle 清单路径：`\"bundle\": {\"patch\": \"./cordis.patch.yml\"}`")
+        else:
+            resolved = os.path.normpath(os.path.join(target, str(patch_path)))
+            if not os.path.exists(resolved):
+                add("BND-002", "high", f"dsh.bundle.patch 指向的文件不存在: {patch_path}",
+                    "bundle.patch 路径必须真实存在（否则 cordis 加载失败）")
 
     # BND-003 files 覆盖
     if pkg is not None:
@@ -135,14 +141,23 @@ def check(target: str) -> dict:
         if main and not os.path.exists(os.path.join(target, main)):
             add("BND-004", "high", f"main 入口缺失: {main}",
                 "构建产物（lib/index.js 等）需存在；发布前跑 npm run build")
+        def _iter_export_paths(v):
+            if isinstance(v, str):
+                yield v
+            elif isinstance(v, dict):
+                for sub in v.values():
+                    yield from _iter_export_paths(sub)
+            elif isinstance(v, list):
+                for item in v:
+                    yield from _iter_export_paths(item)
+
         exports = pkg.get("exports")
         if isinstance(exports, dict):
             for k, v in exports.items():
-                if isinstance(v, dict):
-                    for sub in v.values():
-                        if isinstance(sub, str) and sub.startswith(".") and not os.path.exists(os.path.join(target, sub)):
-                            add("BND-004", "medium", f"exports 引用的文件缺失: {sub}",
-                                "exports 指向的实际文件需存在")
+                for sub in _iter_export_paths(v):
+                    if isinstance(sub, str) and sub.startswith(".") and not os.path.exists(os.path.join(target, sub)):
+                        add("BND-004", "medium", f"exports 引用的文件缺失: {sub}",
+                            "exports 指向的实际文件需存在（含条件导出数组形态）")
 
     # BND-005 bundle id/name 与 package name 一致
     if pkg is not None and inserts:
@@ -166,22 +181,33 @@ def check(target: str) -> dict:
         # 在 src/ 下找 name 导出
         import glob
         hits = []
-        for f in glob.glob(os.path.join(target, "src", "*.ts")):
-            try:
-                lines = open(f, encoding="utf-8").read().split("\n")
-            except OSError:
-                continue
-            for i, ln in enumerate(lines, 1):
-                m = re.search(r"export\s+const\s+name\s*=\s*['\"]([^'\"]+)['\"]", ln)
-                if m:
-                    hits.append((f, i, m.group(1)))
+        scan_globs = [
+            os.path.join(target, "index.ts"), os.path.join(target, "index.js"),
+            os.path.join(target, "src", "*.ts"), os.path.join(target, "src", "*.tsx"),
+            os.path.join(target, "src", "**", "*.ts"),
+            os.path.join(target, "lib", "index.js"),
+        ]
+        seen_files = set()
+        for g in scan_globs:
+            for f in glob.glob(g, recursive=True):
+                if f in seen_files:
+                    continue
+                seen_files.add(f)
+                try:
+                    lines = open(f, encoding="utf-8").read().split("\n")
+                except OSError:
+                    continue
+                for i, ln in enumerate(lines, 1):
+                    m = re.search(r"export\s+const\s+name\s*=\s*['\"]([^'\"]+)['\"]", ln)
+                    if m:
+                        hits.append((f, i, m.group(1)))
         for f, ln, exported in hits:
-            if exported != bare:
+            if exported != bare and exported != pkg_name:
                 add("BND-007", "high",
                     f"插件 name 导出 '{exported}' 与包名 '{bare}' 不一致（{os.path.basename(f)}:{ln}）",
                     "export const name 必须等于插件标识（包名去 scope），防复制遗留导致身份错乱")
         if not hits:
-            add("BND-007", "low", "未在 src/ 找到 export const name",
+            add("BND-007", "low", "未找到 export const name（扫描 index/src/lib）",
                 "标准插件应在入口导出 name（cordis 插件身份）")
 
     # BND-006 结构合规提示

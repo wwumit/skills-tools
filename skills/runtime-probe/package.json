@@ -1,0 +1,7 @@
+{
+  "name": "runtime-probe",
+  "version": "1.1.0",
+  "description": "DSH 插件实机验证引导器（list/get + 证据契约报告）",
+  "private": true,
+  "license": "MIT"
+}

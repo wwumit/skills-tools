@@ -1,6 +1,6 @@
 ---
 name: runtime-probe
-version: 1.0.0
+version: 1.1.0
 description: |
   DSH 插件实机验证引导器。对任意插件目录生成标准验证脚本，在真实 DSH SkillRegistry 中注册插件，
   执行 list()/get() 实测，输出证据契约报告（verifiedBy/verifiedAt/reportUrl/schemaVersion）。

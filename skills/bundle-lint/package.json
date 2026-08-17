@@ -1,0 +1,7 @@
+{
+  "name": "bundle-lint",
+  "version": "1.2.0",
+  "description": "DSH 插件 bundle 结构一致性校验器（BND-001~007）",
+  "private": true,
+  "license": "MIT"
+}

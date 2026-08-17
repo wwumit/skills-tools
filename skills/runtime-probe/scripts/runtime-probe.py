@@ -18,7 +18,9 @@ import re
 import subprocess
 import sys
 
-VERIFY_TEMPLATE = '''/**
+__version__ = "1.1.0"
+
+VERIFY_TEMPLATE = r'''/**
  * 由 runtime-probe 生成的 DSH 实机验证脚本（通用模板）。
  * 注册目标插件 → ctx.skills.list()/get() 实测 → 输出证据契约 JSON。
  */
@@ -39,25 +41,30 @@ async function main(): Promise<void> {{
   const skills = await ctx.skills.list({{ cwd }})
   const names = skills.map((s: any) => s.name)
 
-  let sample: {{ name: string; bytes: number; head: string }} | null = null
-  if (names.length > 0) {{
-    const first = names[0]
-    const one = await ctx.skills.get(first, {{ cwd }})
-    if (one) {{
-      sample = {{ name: first, bytes: one.content.length, head: one.content.slice(0, 80).replace(/\\n/g, ' ') }}
+  const samples: {{ name: string; bytes: number; head: string }}[] = []
+  const probeCount = Math.min(names.length, 3)
+  for (const nm of names.slice(0, probeCount)) {{
+    try {{
+      const one = await ctx.skills.get(nm, {{ cwd }})
+      if (one) {{
+        samples.push({{ name: nm, bytes: one.content.length, head: one.content.slice(0, 80).replace(/\n/g, ' ') }})
+      }}
+    }} catch {{
+      // 单技能 get 失败不中断整体
     }}
   }}
 
+
   const report = {{
-    verifiedBy: 'runtime-probe@1.0.0',
+    verifiedBy: 'runtime-probe@{version}',
     verifiedAt: new Date().toISOString(),
     reportUrl: CATALOG_URL,
     schemaVersion: 'probe-v1',
     plugin: '{package_name}',
     skillCount: names.length,
     skills: names,
-    sample,
-    pass: sample !== null,
+    samples,
+    pass: samples.length > 0,
   }}
   console.log('RUNTIME_PROBE_RESULT:' + JSON.stringify(report))
   if (!report.pass) process.exitCode = 1
@@ -76,16 +83,21 @@ def find_main(pkg: dict, target: str) -> str:
         v = pkg.get(key)
         if v and os.path.exists(os.path.join(target, v)):
             return v
+    def _iter_paths(v):
+        if isinstance(v, str):
+            yield v
+        elif isinstance(v, dict):
+            for sub in v.values():
+                yield from _iter_paths(sub)
+        elif isinstance(v, list):
+            for item in v:
+                yield from _iter_paths(item)
+
     exp = pkg.get("exports")
     if isinstance(exp, dict):
-        dot = exp.get(".")
-        if isinstance(dot, dict):
-            for k in ("default", "require", "import", "types"):
-                v = dot.get(k)
-                if isinstance(v, str) and os.path.exists(os.path.join(target, v)):
-                    return v
-        elif isinstance(dot, str) and os.path.exists(os.path.join(target, dot)):
-            return dot
+        for cand in _iter_paths(exp.get(".")):
+            if isinstance(cand, str) and cand.startswith(".") and os.path.exists(os.path.join(target, cand)):
+                return cand.lstrip("./") if cand.startswith("./") else cand
     for cand in ("lib/index.js", "dist/index.js", "index.js"):
         if os.path.exists(os.path.join(target, cand)):
             return cand
@@ -128,6 +140,7 @@ def probe(target: str, catalog_url: str, harness: str) -> dict:
         catalog_url=catalog_url,
         cwd=os.path.abspath(target),
         package_name=pkg.get("name", ""),
+        version=__version__,
     )
     probe_path = os.path.join(target, "runtime-probe.mts")
     with open(probe_path, "w", encoding="utf-8") as f:
@@ -162,12 +175,16 @@ def main():
     ap.add_argument("--harness", default="/Users/wuwei/deepseek-harness",
                     help="DeepSeek Harness 仓库路径（含 node_modules）")
     ap.add_argument("--format", "-f", choices=["text", "json"], default="text")
+    ap.add_argument("--keep", action="store_true", help="保留生成的 runtime-probe.mts（默认运行后清理）")
     args = ap.parse_args()
 
     if not os.path.isdir(args.dir):
         raise SystemExit(f"错误：目录不存在 {args.dir}")
 
     report = probe(args.dir, args.catalog, args.harness)
+    probe_file = os.path.join(args.dir, "runtime-probe.mts")
+    if not args.keep and os.path.exists(probe_file):
+        os.remove(probe_file)
 
     if args.format == "json":
         print(json.dumps(report, ensure_ascii=False, indent=2))
