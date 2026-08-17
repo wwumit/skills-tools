@@ -1376,7 +1376,11 @@
         "permissions.*\\*\\*",
         "with .*permissions",
         "permission.*— \\*\\*",
-        "`0600` permissions"
+        "`0600` permissions",
+        "\"\\*\", \"x\"",
+        "\"\\^\"",
+        "版本范围符",
+        "范围符"
       ],
       "legal_source": "OWASP Least Privilege Principle 及 SkillHub 平台 MCP 安全规范：MCP 工具应遵循最小权限原则，明确声明所需的具体工具和资源，避免使用通配符声明。",
       "authority_type": "platform_policy"
@@ -1990,6 +1994,51 @@
       ],
       "exclude_patterns": [],
       "legal_source": "DISCLOSURE v0.3 pay 维度；付费技能披露规范（2026-08-16 讨论）"
+    },
+    {
+      "id": "DEP-002",
+      "name": "依赖版本未锁定",
+      "category": "DEPENDENCY",
+      "severity": "medium",
+      "redline": false,
+      "description": "package.json 依赖使用范围符（^/~/>=/*）而非精确版本。供应链最佳实践：锁定精确版本（=x.y.z）保证可复现构建；范围符导致不同环境解析到不同版本，更新检测与审计不可靠。",
+      "behavioral": true,
+      "patterns": [],
+      "scan_targets": [
+        "package.json"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "供应链最佳实践；npm 依赖锁定建议"
+    },
+    {
+      "id": "DEP-003",
+      "name": "已知高危/可疑依赖包",
+      "category": "DEPENDENCY",
+      "severity": "high",
+      "redline": false,
+      "description": "dependencies 包含已知高危/可疑包（内置基线规则库：无维护、恶意历史、数据外传记录）。基线库随包分发；完整威胁情报需生态级 scan 后端库（规则库版本化 + fail-closed，生态共建议题）。",
+      "behavioral": true,
+      "patterns": [],
+      "scan_targets": [
+        "package.json"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "供应链安全；内置基线（生态级 scan 后端库为远期共建）"
+    },
+    {
+      "id": "DEP-004",
+      "name": "宿主接口缺 peerDependencies 声明",
+      "category": "DEPENDENCY",
+      "severity": "medium",
+      "redline": false,
+      "description": "代码 import @deepseek-ai/* 宿主接口包，但 package.json peerDependencies 未声明。宿主包应显式声明为 peerDependencies（安装时可提示宿主版本兼容），缺失会导致静默依赖宿主版本。",
+      "behavioral": true,
+      "patterns": [],
+      "scan_targets": [
+        "package.json"
+      ],
+      "exclude_patterns": [],
+      "legal_source": "STANDARD.md §2.1 宿主依赖硬规则；依赖声明完整性"
     }
   ],
   "rule_groups": {
@@ -1998,6 +2047,9 @@
       "enabled_rules": [
         "ADV-001",
         "DEP-001",
+        "DEP-002",
+        "DEP-003",
+        "DEP-004",
         "DISC-001",
         "DISC-002",
         "DISC-003",
@@ -2059,6 +2111,9 @@
       "enabled_rules": [
         "ADV-001",
         "DEP-001",
+        "DEP-002",
+        "DEP-003",
+        "DEP-004",
         "DISC-001",
         "DISC-002",
         "DISC-003",

@@ -523,6 +523,13 @@ class ComplianceChecker:
 
     # ── 检查 5d：发布披露（DISCLOSURE v0.2）───────────────────
 
+    # 内置高危/可疑依赖基线（供应链扫描静态层；生态级威胁情报库为远期共建）
+    SUSPICIOUS_DEP_BASELINE = {
+        # 无维护/已知问题的包（占位示例——正式基线随版本演进，规则库版本化）
+        "event-stream", "flatmap-stream", "ua-parser-js",
+        "left-pad", "minimist",
+    }
+
     _NETWORK_CALL_PATTERNS = [
         re.compile(r"requests\.(get|post|put|delete|patch|head)\s*\(", re.I),
         re.compile(r"urllib\.(request|parse)\.[a-z_]+", re.I),
@@ -739,7 +746,9 @@ class ComplianceChecker:
     # ── 检查 5e：宿主依赖声明（DEPENDENCY，@yzke 遮蔽案例）─────
 
     def check_dependency(self):
-        """package.json 中 @deepseek-ai/* 宿主包不得进普通 dependencies。"""
+        """依赖安全扫描（dependency-scan 静态层）：
+        DEP-001 宿主遮蔽 / DEP-002 版本锁定 / DEP-003 高危基线 / DEP-004 peer 完整性。
+        注：完整威胁情报需生态级 scan 后端规则库（版本化 + fail-closed），此处为内置基线。"""
         pkg_lines = self._read("package.json")
         if not pkg_lines:
             return
@@ -754,6 +763,9 @@ class ComplianceChecker:
                 deps.update(v)
             elif isinstance(v, list):
                 deps.update({d: "" for d in v})
+        peer = pkg.get("peerDependencies") if isinstance(pkg.get("peerDependencies"), dict) else {}
+
+        # DEP-001 宿主包遮蔽
         host_pkgs = sorted(k for k in deps if k.startswith("@deepseek-ai/"))
         if host_pkgs:
             self._add(
@@ -762,6 +774,51 @@ class ComplianceChecker:
                 found="DSH 宿主包在普通 dependencies: " + ", ".join(host_pkgs),
                 recommendation=self._rule_rec("DEP-001"),
                 legal_source="STANDARD.md §2.1 硬规则 + §6.6 反模式（#2269 @yzke 遮蔽案例）",
+                authority_type="platform_policy",
+            )
+
+        # DEP-002 版本未锁定（范围符）
+        unlocked = []
+        for k, v in deps.items():
+            vs = str(v or "")
+            if any(ch in vs for ch in ("^", "~", ">", "<", "*", "x")):
+                unlocked.append(f"{k}@{vs}")
+        if unlocked:
+            self._add(
+                category="DEPENDENCY", severity="medium",
+                file="package.json", line=0,
+                found="依赖版本未锁定（范围符）: " + ", ".join(unlocked[:5]),
+                recommendation=self._rule_rec("DEP-002"),
+                legal_source="供应链最佳实践（精确版本锁定保证可复现）",
+                authority_type="platform_policy",
+            )
+
+        # DEP-003 高危/可疑依赖基线（内置；生态级规则库为远期共建）
+        suspicious = sorted(k for k in deps if k in self.SUSPICIOUS_DEP_BASELINE)
+        if suspicious:
+            self._add(
+                category="DEPENDENCY", severity="high",
+                file="package.json", line=0,
+                found="已知高危/可疑依赖（内置基线）: " + ", ".join(suspicious),
+                recommendation=self._rule_rec("DEP-003"),
+                legal_source="供应链安全基线（完整威胁情报需生态级 scan 后端库）",
+                authority_type="platform_policy",
+            )
+
+        # DEP-004 代码引用 @deepseek-ai/* 但 peerDependencies 未声明
+        imported_host = set()
+        for f in ("index.js", "lib/index.js", "src/index.ts", "src/index.js"):
+            for line in self._read(f):
+                for m in re.finditer(r"@deepseek-ai/[a-z-]+", line):
+                    imported_host.add(m.group(0))
+        missing_peer = sorted(n for n in imported_host if n not in peer)
+        if missing_peer:
+            self._add(
+                category="DEPENDENCY", severity="medium",
+                file="package.json", line=0,
+                found="代码 import 宿主包但 peerDependencies 未声明: " + ", ".join(missing_peer[:5]),
+                recommendation=self._rule_rec("DEP-004"),
+                legal_source="STANDARD.md §2.1 宿主依赖声明完整性",
                 authority_type="platform_policy",
             )
 
