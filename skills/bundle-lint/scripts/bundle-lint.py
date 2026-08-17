@@ -156,6 +156,34 @@ def check(target: str) -> dict:
             if not ins.get("id"):
                 add("BND-005", "medium", "bundle insert 缺少 id", "提供注册 id（如 dsh-<线名>）")
 
+    # BND-007 插件 name 导出与包名一致（防复制遗留：name 导出指向别的插件）
+    if pkg is not None:
+        pkg_name = pkg.get("name", "")
+        if pkg_name.startswith("@"):
+            bare = pkg_name.split("/")[1] if "/" in pkg_name else pkg_name
+        else:
+            bare = pkg_name
+        # 在 src/ 下找 name 导出
+        import glob
+        hits = []
+        for f in glob.glob(os.path.join(target, "src", "*.ts")):
+            try:
+                lines = open(f, encoding="utf-8").read().split("\n")
+            except OSError:
+                continue
+            for i, ln in enumerate(lines, 1):
+                m = re.search(r"export\s+const\s+name\s*=\s*['\"]([^'\"]+)['\"]", ln)
+                if m:
+                    hits.append((f, i, m.group(1)))
+        for f, ln, exported in hits:
+            if exported != bare:
+                add("BND-007", "high",
+                    f"插件 name 导出 '{exported}' 与包名 '{bare}' 不一致（{os.path.basename(f)}:{ln}）",
+                    "export const name 必须等于插件标识（包名去 scope），防复制遗留导致身份错乱")
+        if not hits:
+            add("BND-007", "low", "未在 src/ 找到 export const name",
+                "标准插件应在入口导出 name（cordis 插件身份）")
+
     # BND-006 结构合规提示
     if pkg is not None:
         has_topic = pkg.get("keywords", []) or []
