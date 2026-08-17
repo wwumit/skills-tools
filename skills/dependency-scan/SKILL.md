@@ -33,7 +33,8 @@ disclaimer: 本工具为辅助性参考工具，不构成法律建议；最终�
 
 ## Usage
 ```bash
-python3 scripts/dependency-scan.py --dir <插件目录> --format json
+python3 scripts/dependency-scan.py --dir <插件目录> --format json        # 离线（内置基线）
+python3 scripts/dependency-scan.py --dir <插件目录> --online --format json  # 在线（OSV 已知漏洞/恶意包）
 ```
 
 ## 输出（JSON）

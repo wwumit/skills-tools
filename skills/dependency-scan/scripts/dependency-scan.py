@@ -26,9 +26,32 @@ SUSPICIOUS_BASELINE = {
     "event-stream", "flatmap-stream", "ua-parser-js", "left-pad", "minimist",
 }
 SEVERITY_PENALTY = {"high": 15, "medium": 5}
+OSV_API = "https://api.osv.dev/v1/querybatch"
 
 
-def scan(target: str) -> dict:
+def osv_query(deps: dict, timeout: int = 15) -> list[dict]:
+    """按包名批量查询 OSV（已知漏洞 + 恶意包，GHSA/CVE/MAL）。网络不可达时返回 []。"""
+    import json as _json
+    import urllib.request
+    queries = [{"package": {"name": k, "ecosystem": "npm"}} for k in deps]
+    if not queries:
+        return []
+    try:
+        req = urllib.request.Request(OSV_API, data=_json.dumps({"queries": queries}).encode("utf-8"),
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = _json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return []
+    hits = []
+    for q, r in zip(queries, data.get("results", [])):
+        for v in r.get("vulns", []):
+            hits.append({"package": q["package"]["name"], "id": v.get("id", ""),
+                         "summary": v.get("summary", "")[:100], "details": v.get("details", "")[:60]})
+    return hits
+
+
+def scan(target: str, online: bool = False) -> dict:
     root = Path(target).resolve()
     pkg_path = root / "package.json"
     issues = []
@@ -77,16 +100,29 @@ def scan(target: str) -> dict:
         issues.append({"rule": "DEP-004", "severity": "medium",
                        "found": f"代码引用宿主包但 peerDependencies 未声明: {', '.join(missing_peer[:5])}"})
 
+    # OSV 在线查询（已知漏洞 + 恶意包，GHSA/CVE/MAL）——fail-closed：不可达仅提示
+    if online:
+        osv_hits = osv_query(deps)
+        if osv_hits:
+            for h in osv_hits:
+                issues.append({"rule": "OSV-001", "severity": "high",
+                               "found": f"{h['package']}: {h['id']} {h['summary']}"})
+        else:
+            issues.append({"rule": "OSV-INFO", "severity": "low",
+                           "found": "OSV 在线查询无结果或不可达（离线基线兜底）"})
+
     score = max(0, 100 - sum(SEVERITY_PENALTY.get(i["severity"], 0) for i in issues))
-    return {"scanner": f"dependency-scan@{VERSION}", "target": str(root), "issues": issues, "score": score}
+    return {"scanner": f"dependency-scan@{VERSION}", "target": str(root),
+            "issues": issues, "score": score, "online": online}
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="供应链依赖扫描器（独立实现，与 skill-compliance DEP 对齐）")
     parser.add_argument("--dir", "-d", default=".", help="目标插件目录")
     parser.add_argument("--format", "-f", choices=["json", "text"], default="text")
+    parser.add_argument("--online", action="store_true", help="在线查询 OSV（已知漏洞/恶意包）")
     args = parser.parse_args()
-    result = scan(args.dir)
+    result = scan(args.dir, online=args.online)
     if args.format == "json":
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
