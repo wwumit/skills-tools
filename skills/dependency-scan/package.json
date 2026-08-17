@@ -1,0 +1,7 @@
+{
+  "name": "dependency-scan",
+  "version": "1.0.0",
+  "description": "供应链依赖扫描器（DEP-001~004 + OSV 在线漏洞查询）",
+  "private": true,
+  "license": "MIT"
+}
