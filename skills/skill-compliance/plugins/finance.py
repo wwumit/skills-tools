@@ -28,8 +28,8 @@ class FinanceCompliancePlugin(CompliancePlugin):
         "交易", "投资", "行情", "K线", "走势", "大盘",
         "涨停", "跌停", "仓位", "持仓", "建仓", "减仓",
         "买入", "卖出", "做多", "做空", "多头", "空头",
-        "stock", "fund", "trade", "invest", "portfolio",
-        "bullish", "bearish", "long", "short", "position",
+        "\\bstock\\b", "\\bfund\\b", "\\btrade\\b", "\\binvest\\b", "\\bportfolio\\b",
+        "\\bbullish\\b", "\\bbearish\\b", "\\blong\\b", "\\bshort\\b", "\\bposition\\b",
     ]
 
     # ── 必需的三项声明 ──
