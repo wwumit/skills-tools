@@ -47,7 +47,8 @@ python3 scripts/dependency-scan.py --dir <插件目录> --format json
 }
 ```
 
-## 实现说明（与 skill-compliance 同源）
-- 本工具是 skill-compliance 依赖检查（DEP-001~004）的**独立 CLI 入口**——检查逻辑由 skill-compliance 提供，规则一处演进，避免两套实现
-- skill-compliance 是 STANDARD §7/§9 采纳的权威检查器（含 DEP 检查）；dependency-scan 提供依赖专项的独立调用入口
+## 实现说明（互不依赖，功能对齐）
+- 本工具**独立实现** DEP-001~004（不依赖 skill-compliance），与 skill-compliance 的 DEPENDENCY 检查**功能对齐**（同规则、同严重级）
+- 两工具互不依赖：各自零依赖独立可跑（skill-compliance 是 STANDARD §7/§9 采纳的权威检查器；dependency-scan 是依赖专项工具）
+- **对齐保证**：tests/alignment.py 对同一用例断言两工具 DEP 判定一致；规则演进时两处同步更新并跑对齐测试
 - 纯 Python 标准库，无网络请求，无第三方依赖；不执行代码、不安装依赖，只读 package.json 与入口文件
