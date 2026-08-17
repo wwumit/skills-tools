@@ -47,7 +47,7 @@ python3 scripts/dependency-scan.py --dir <插件目录> --format json
 }
 ```
 
-## 安全说明
-- 纯 Python 标准库，无网络请求，无第三方依赖
-- 内置基线库随包分发；完整威胁情报（动态更新的漏洞/恶意包库）需生态级 scan 后端规则库（版本化 + fail-closed），远期共建
-- 不执行代码、不安装依赖、只读 package.json 与入口文件
+## 实现说明（与 skill-compliance 同源）
+- 本工具是 skill-compliance 依赖检查（DEP-001~004）的**独立 CLI 入口**——检查逻辑由 skill-compliance 提供，规则一处演进，避免两套实现
+- skill-compliance 是 STANDARD §7/§9 采纳的权威检查器（含 DEP 检查）；dependency-scan 提供依赖专项的独立调用入口
+- 纯 Python 标准库，无网络请求，无第三方依赖；不执行代码、不安装依赖，只读 package.json 与入口文件
